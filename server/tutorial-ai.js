@@ -93,8 +93,8 @@ function payloadForCard(game,bot,card){
   if(card.effect==='loyal_dog')return anyTarget()?{targetId:anyTarget().id,amount:Math.random()<0.65?100:200}:null;
   if(card.effect==='shadow_deal')return anyTarget()?{targetId:anyTarget().id,amount:Math.random()<0.7?100:200}:null;
   if(card.effect==='royal_parrot')return anyTarget()?{targetId:anyTarget().id,phrase:'Je respecte la couronne.'}:null;
-  if(card.effect==='loyalty')return anyTarget()?{targetId:anyTarget().id,mode:Math.random()<0.65?'choose':'force'}:null;
-  if(card.effect==='wrath')return anyTarget()?{targetId:anyTarget().id,mode:Math.random()<0.2?'bank':'player'}:null;
+  if(card.effect==='loyalty')return anyTarget()?{targetId:anyTarget().id,mode:'choose'}:null;
+  if(card.effect==='wrath')return anyTarget()?{targetId:anyTarget().id,mode:Math.random()<0.2?'bank':'noble'}:null;
   if(card.effect==='meat')return chooseTarget(game,bot,'botNoble')?{targetId:chooseTarget(game,bot,'botNoble').id}:null;
   const target=nobleTarget();
   return target?{targetId:target.id}:null;
