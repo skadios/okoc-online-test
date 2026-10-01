@@ -38,6 +38,15 @@ export default function TutorialGame({lang='fr',goHome}){
   const [tradeOffer,setTradeOffer]=useState(null);
   const [coachVisible,setCoachVisible]=useState(true);
 
+  useEffect(()=>{
+    const previous=localStorage.getItem('playerId');
+    localStorage.setItem('playerId','tutorial-1');
+    return()=>{
+      if(previous===null)localStorage.removeItem('playerId');
+      else localStorage.setItem('playerId',previous);
+    };
+  },[]);
+
   const apply=useCallback(data=>{
     if(!data?.state)throw new Error('Le tutoriel a répondu sans état de partie.');
     setState(data.state);
