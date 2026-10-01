@@ -202,6 +202,92 @@ function respondPending(game){
     return false;
   }
 
+  // Resolve multi-player decisions progressively. Bots may act even when the
+  // human is one of the participants; only the human's own response should block.
+  if(q.type==='actorsThank'){
+    const missingBot=game.players.find(p=>BOT_IDS.has(p.id)&&!(q.acks||{})[p.id]);
+    if(missingBot){action(game,missingBot.id,{type:'decision',payload:{},actionId:`tutorial-${Date.now()}-${Math.random()}`});return true;}
+    if(BOT_IDS.has(q.actorId)&&Object.keys(q.acks||{}).length>=game.players.length){
+      const target=chooseTarget(game,playerById(game,q.actorId),'any');
+      if(target){action(game,q.actorId,{type:'decision',payload:{targetId:target.id},actionId:`tutorial-${Date.now()}-${Math.random()}`});return true;}
+    }
+    return false;
+  }
+  if(q.type==='betrayalSupport'){
+    const missing=q.eligible?.find(id=>BOT_IDS.has(id)&&!q.supports.some(x=>x.playerId===id));
+    if(missing){action(game,missing,{type:'decision',payload:{support:Math.random()<0.62},actionId:`tutorial-${Date.now()}-${Math.random()}`});return true;}
+    return false;
+  }
+  if(q.type==='betrayKing'){
+    const missing=q.eligible?.find(id=>BOT_IDS.has(id)&&!q.supports.some(x=>x.playerId===id));
+    if(missing){action(game,missing,{type:'decision',payload:{support:Math.random()<0.55},actionId:`tutorial-${Date.now()}-${Math.random()}`});return true;}
+    if(q.awaitRoll&&BOT_IDS.has(q.rollPlayerId)){
+      action(game,q.rollPlayerId,{type:'decision',payload:{roll:true},actionId:`tutorial-${Date.now()}-${Math.random()}`});return true;
+    }
+    return false;
+  }
+  if(q.type==='council'){
+    if(q.stage==='voting'){
+      const missing=q.eligible?.find(id=>BOT_IDS.has(id)&&!(q.votes||{})[id]);
+      if(missing){action(game,missing,{type:'decision',payload:{vote:Math.random()<0.6},actionId:`tutorial-${Date.now()}-${Math.random()}`});return true;}
+      return false;
+    }
+    if(q.stage==='praise'&&BOT_IDS.has(q.actorId)){
+      action(game,q.actorId,{type:'decision',payload:{ackPraise:true},actionId:`tutorial-${Date.now()}-${Math.random()}`});return true;
+    }
+    return false;
+  }
+  if(q.type==='snakes'){
+    const missing=q.eligible?.find(id=>BOT_IDS.has(id)&&!(q.votes||{})[id]);
+    if(missing){action(game,missing,{type:'decision',payload:{vote:Math.random()<0.5},actionId:`tutorial-${Date.now()}-${Math.random()}`});return true;}
+    return false;
+  }
+  if(q.type==='champion'){
+    if(q.stage==='rolling'){
+      const missing=q.rollPlayers?.find(id=>BOT_IDS.has(id)&&q.rolls?.[id]==null);
+      if(missing){action(game,missing,{type:'decision',payload:{roll:true},actionId:`tutorial-${Date.now()}-${Math.random()}`});return true;}
+      return false;
+    }
+    const missing=q.eligible?.find(id=>BOT_IDS.has(id)&&!(q.votes||{})[id]);
+    if(missing){action(game,missing,{type:'decision',payload:{vote:Math.random()<0.65},actionId:`tutorial-${Date.now()}-${Math.random()}`});return true;}
+    return false;
+  }
+  if(q.type==='madKingRoll'){
+    const missing=q.rollPlayers?.find(id=>BOT_IDS.has(id)&&q.rolls?.[id]==null);
+    if(missing){action(game,missing,{type:'decision',payload:{roll:true},actionId:`tutorial-${Date.now()}-${Math.random()}`});return true;}
+    return false;
+  }
+  if(q.type==='blackPlague'){
+    if(q.stage==='pairing'){
+      const botId=q.unpairedIds?.find(id=>BOT_IDS.has(id));
+      if(botId){
+        const partner=q.unpairedIds.find(id=>id!==botId&&BOT_IDS.has(id))||q.unpairedIds.find(id=>id!==botId);
+        if(partner){action(game,botId,{type:'decision',payload:{partnerId:partner},actionId:`tutorial-${Date.now()}-${Math.random()}`});return true;}
+      }
+      return false;
+    }
+    if(q.stage==='rollingPairs'){
+      const missing=q.pairs?.flat().find(id=>BOT_IDS.has(id)&&q.rolls?.[id]==null);
+      if(missing){action(game,missing,{type:'decision',payload:{roll:true},actionId:`tutorial-${Date.now()}-${Math.random()}`});return true;}
+      return false;
+    }
+    if(q.stage==='loneRolling'&&BOT_IDS.has(q.loneId)){
+      action(game,q.loneId,{type:'decision',payload:{roll:true},actionId:`tutorial-${Date.now()}-${Math.random()}`});return true;
+    }
+    return false;
+  }
+  if(q.type==='scapegoat'){
+    if(q.stage==='rolling'&&BOT_IDS.has(q.rollPlayerId)){
+      action(game,q.rollPlayerId,{type:'decision',payload:{roll:true},actionId:`tutorial-${Date.now()}-${Math.random()}`});return true;
+    }
+    if(q.currentVoterId&&BOT_IDS.has(q.currentVoterId)){
+      const voter=playerById(game,q.currentVoterId);
+      const target=chooseTarget(game,voter,'noble');
+      if(target){action(game,voter.id,{type:'decision',payload:{targetId:target.id},actionId:`tutorial-${Date.now()}-${Math.random()}`});return true;}
+    }
+    return false;
+  }
+
   if(!actorCanResolveWithoutHuman(game,q))return false;
   let pid=null,payload=null;
   switch(q.type){
@@ -238,7 +324,7 @@ function respondPending(game){
     default:return false;
   }
   if(!pid||!playerById(game,pid))return false;
-  action(game,pid,{type:'decision',payload,actionId:`tutorial-1790867780170-0.2962890335222981`});
+  action(game,pid,{type:'decision',payload,actionId:`tutorial-${Date.now()}-${Math.random()}`});
   return true;
 }
 
