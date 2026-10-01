@@ -442,3 +442,31 @@
 
 /* All game-card notifications stay visible until the user closes them. */
 .card-event-banner{pointer-events:auto!important;animation:cardEventIn .34s cubic-bezier(.2,.85,.25,1.15) forwards!important}
+
+/* Guided tutorial */
+.menu-item.accent{position:relative;}
+.menu-item.accent::after{content:'3 BOTS';position:absolute;right:2.8rem;top:50%;transform:translateY(-50%);font-size:.58rem;letter-spacing:.12em;opacity:.58;pointer-events:none;}
+.tutorial-host{position:relative;min-height:100vh;}
+.tutorial-coach{position:fixed;z-index:80;left:50%;bottom:1.25rem;transform:translateX(-50%);width:min(620px,calc(100vw - 2rem));padding:1rem 1.15rem;background:rgba(18,18,18,.96);color:#fff;border:1px solid rgba(255,255,255,.16);box-shadow:0 16px 50px rgba(0,0,0,.32);backdrop-filter:blur(12px);pointer-events:auto;}
+.tutorial-coach--intro{border-top:3px solid #e31b23;}
+.tutorial-coach--rule{border-top:3px solid #d4af37;}
+.tutorial-coach--play{border-top:3px solid #6d9cff;}
+.tutorial-coach--action{border-top:3px solid #9a7cff;}
+.tutorial-coach--negotiation{border-top:3px solid #b98a4a;}
+.tutorial-coach--finish{border-top:3px solid #4da36a;}
+.tutorial-coach-top{display:flex;align-items:center;justify-content:space-between;gap:1rem;font-size:.65rem;letter-spacing:.14em;opacity:.72;}
+.tutorial-coach-top button{border:0;background:transparent;color:inherit;font-size:1.25rem;cursor:pointer;padding:.1rem .3rem;}
+.tutorial-coach-progress{height:3px;background:rgba(255,255,255,.12);margin:.65rem 0 .8rem;overflow:hidden;}
+.tutorial-coach-progress i{display:block;height:100%;background:#e31b23;transition:width .35s ease;}
+.tutorial-coach strong{display:block;font-size:1.02rem;letter-spacing:.03em;margin-bottom:.35rem;}
+.tutorial-coach p{margin:0;line-height:1.45;font-size:.88rem;color:rgba(255,255,255,.82);}
+.tutorial-coach-actions{display:flex;gap:.5rem;justify-content:flex-end;margin-top:.8rem;}
+.tutorial-coach-actions button,.tutorial-coach-reopen{border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.07);color:inherit;padding:.48rem .7rem;font-size:.65rem;letter-spacing:.08em;cursor:pointer;}
+.tutorial-coach-reopen{position:fixed;z-index:79;right:1rem;bottom:1rem;background:#171717;color:#fff;}
+.tutorial-error{position:fixed;z-index:90;top:1rem;right:1rem;max-width:min(420px,calc(100vw - 2rem));padding:.7rem .9rem;background:#2a1717;color:#fff;border:1px solid rgba(255,255,255,.16);cursor:pointer;}
+.tutorial-loading{min-height:100vh;}
+@media(max-width:700px){
+  .menu-item.accent::after{display:none;}
+  .tutorial-coach{bottom:.6rem;width:calc(100vw - 1rem);padding:.85rem;}
+  .tutorial-coach p{font-size:.82rem;}
+}
