@@ -159,7 +159,50 @@ function actorCanResolveWithoutHuman(game,q){
 
 function respondPending(game){
   const q=game.pending;
-  if(!q||!actorCanResolveWithoutHuman(game,q))return false;
+  if(!q)return false;
+
+  // We Ride Together has a strict two-stage sequence. Resolve it explicitly
+  // here so a tutorial game can never stop after the two bot rolls.
+  if(q.type==='weRide'){
+    if(q.stage==='rolling'){
+      const humanParticipant=q.aId===HUMAN_ID||q.bId===HUMAN_ID;
+      const missing=[q.aId,q.bId].find(id=>q.rolls?.[id]==null);
+      if(missing===HUMAN_ID || (humanParticipant && !missing))return false;
+      if(missing && BOT_IDS.has(missing)){
+        try{
+          action(game,missing,{type:'decision',payload:{roll:true},actionId:`tutorial-we-ride-${Date.now()}-${Math.random()}`});
+          return true;
+        }catch(error){
+          console.error('[OKOC TUTORIAL AI] We Ride bot roll failed',error);
+          return false;
+        }
+      }
+      return false;
+    }
+    if(q.stage==='lowerChoice'){
+      if(!BOT_IDS.has(q.lowerId))return false;
+      try{
+        action(game,q.lowerId,{type:'decision',payload:{choice:Math.random()<0.58?'full':'split'},actionId:`tutorial-we-ride-choice-${Date.now()}-${Math.random()}`});
+        return true;
+      }catch(error){
+        console.error('[OKOC TUTORIAL AI] We Ride lower choice failed',error);
+        return false;
+      }
+    }
+    if(q.stage==='higherChoice'){
+      if(!BOT_IDS.has(q.higherId))return false;
+      try{
+        action(game,q.higherId,{type:'decision',payload:{accept:Math.random()<0.52},actionId:`tutorial-we-ride-answer-${Date.now()}-${Math.random()}`});
+        return true;
+      }catch(error){
+        console.error('[OKOC TUTORIAL AI] We Ride higher choice failed',error);
+        return false;
+      }
+    }
+    return false;
+  }
+
+  if(!actorCanResolveWithoutHuman(game,q))return false;
   let pid=null,payload=null;
   switch(q.type){
     case'allies': pid=q.targetId; payload={choice:playerById(game,pid)?.gold<700?'gain100':'lose200'};break;
