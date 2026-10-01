@@ -44,6 +44,7 @@ function chooseTarget(game,bot,kind='any'){
   const pool=rankedTargets(game,bot,kind);
   if(!pool.length)return null;
   // Mostly sensible, occasionally imperfect: the bots should feel human rather than optimal.
+  if(pool.some(p=>p.id===HUMAN_ID)&&Math.random()<0.22)return pool.find(p=>p.id===HUMAN_ID);
   if(pool.length>1 && Math.random()<0.25)return pool[Math.floor(Math.random()*Math.min(3,pool.length))];
   return pool[0];
 }
@@ -94,7 +95,7 @@ function payloadForCard(game,bot,card){
   if(card.effect==='shadow_deal')return anyTarget()?{targetId:anyTarget().id,amount:Math.random()<0.7?100:200}:null;
   if(card.effect==='royal_parrot')return anyTarget()?{targetId:anyTarget().id,phrase:'Je respecte la couronne.'}:null;
   if(card.effect==='loyalty')return anyTarget()?{targetId:anyTarget().id,mode:'choose'}:null;
-  if(card.effect==='wrath')return anyTarget()?{targetId:anyTarget().id,mode:Math.random()<0.2?'bank':'noble'}:null;
+  if(card.effect==='wrath'){const target=chooseTarget(game,bot,'noble')||chooseTarget(game,bot,'bot')||chooseTarget(game,bot);return target?{targetId:target.id,mode:Math.random()<0.2?'bank':'noble'}:null;}
   if(card.effect==='meat')return chooseTarget(game,bot,'botNoble')?{targetId:chooseTarget(game,bot,'botNoble').id}:null;
   const target=nobleTarget();
   return target?{targetId:target.id}:null;
