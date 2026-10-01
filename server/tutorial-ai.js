@@ -58,7 +58,7 @@ function payloadForCard(game,bot,card){
       const a=ns[0]||nobleTarget(); const b=ns.find(x=>x.id!==a?.id)||ns[1]||nobleTarget();
       return a&&b&&a.id!==b.id?{targetId:a.id,target2Id:b.id}:null;
     }
-    case'allies': return null;
+    case'allies': { const target=nobleTarget(); return target?{targetId:target.id}:null; }
     case'betrayal':
     case'hindsight':
     case'indebted':
@@ -91,9 +91,9 @@ function payloadForCard(game,bot,card){
     const b=rankedTargets(game,bot,'botNoble').find(x=>x.id!==a?.id)||rankedTargets(game,bot,'noble').find(x=>x.id!==a?.id);
     return a&&b?{targetId:a.id,target2Id:b.id}:null;
   }
-  if(card.effect==='loyal_dog')return anyTarget()?{targetId:anyTarget().id,amount:Math.random()<0.65?100:200}:null;
-  if(card.effect==='shadow_deal')return anyTarget()?{targetId:anyTarget().id,amount:Math.random()<0.7?100:200}:null;
-  if(card.effect==='royal_parrot')return anyTarget()?{targetId:anyTarget().id,phrase:'Je respecte la couronne.'}:null;
+  if(card.effect==='loyal_dog'){const target=anyTarget();return target?{targetId:target.id,amount:Math.random()<0.65?100:200}:null;}
+  if(card.effect==='shadow_deal'){const target=anyTarget();return target?{targetId:target.id,amount:Math.random()<0.7?100:200}:null;}
+  if(card.effect==='royal_parrot'){const target=anyTarget();return target?{targetId:target.id,phrase:'Je respecte la couronne.'}:null;}
   if(card.effect==='loyalty')return anyTarget()?{targetId:anyTarget().id,mode:'choose'}:null;
   if(card.effect==='wrath'){const target=chooseTarget(game,bot,'noble')||chooseTarget(game,bot,'bot')||chooseTarget(game,bot);return target?{targetId:target.id,mode:Math.random()<0.2?'bank':'noble'}:null;}
   if(card.effect==='meat')return chooseTarget(game,bot,'botNoble')?{targetId:chooseTarget(game,bot,'botNoble').id}:null;
