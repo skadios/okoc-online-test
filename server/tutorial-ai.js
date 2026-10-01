@@ -94,7 +94,7 @@ function payloadForCard(game,bot,card){
   if(card.effect==='loyal_dog'){const target=anyTarget();return target?{targetId:target.id,amount:Math.random()<0.65?100:200}:null;}
   if(card.effect==='shadow_deal'){const target=anyTarget();return target?{targetId:target.id,amount:Math.random()<0.7?100:200}:null;}
   if(card.effect==='royal_parrot'){const target=anyTarget();return target?{targetId:target.id,phrase:'Je respecte la couronne.'}:null;}
-  if(card.effect==='loyalty')return anyTarget()?{targetId:anyTarget().id,mode:'choose'}:null;
+  if(card.effect==='loyalty'){const target=anyTarget();return target?{targetId:target.id,mode:'choose'}:null;}
   if(card.effect==='wrath'){const target=chooseTarget(game,bot,'noble')||chooseTarget(game,bot,'bot')||chooseTarget(game,bot);return target?{targetId:target.id,mode:Math.random()<0.2?'bank':'noble'}:null;}
   if(card.effect==='meat')return chooseTarget(game,bot,'botNoble')?{targetId:chooseTarget(game,bot,'botNoble').id}:null;
   const target=nobleTarget();
@@ -295,7 +295,7 @@ function respondPending(game){
     case'grudge': pid=q.targetId; payload={accept:Math.random()<0.55,payerId:chooseTarget(game,playerById(game,q.targetId),'noble')?.id};break;
     case'loyaltyPledge': pid=q.targetId; payload={ack:true};break;
     case'loyalty': pid=q.targetId; payload={choice:Math.random()<0.7?'payActor':'forceKing'};break;
-    case'tithe': pid=q.targetId; payload={payerId:chooseTarget(game,playerById(game,q.targetId),'noble')?.id};break;
+    case'tithe': { pid=q.targetId; const chooser=playerById(game,pid); const payer=rankedTargets(game,chooser,'noble').find(x=>x.id!==q.actorId); payload=payer?{payerId:payer.id}:null; break; }
     case'bendKnee': pid=q.targetId; payload={accept:playerById(game,pid)?.gold<300||Math.random()<0.65};break;
     case'anchor': pid=q.targetId; payload={choice:playerById(game,pid)?.gold>900?'lose100ToOther':'lose200'};break;
     case'debtCollector': pid=q.targetId; payload={targetId:chooseTarget(game,playerById(game,pid),'noble')?.id};break;
