@@ -161,7 +161,7 @@ function respondPending(game){
     case'allies': pid=q.targetId; payload={choice:playerById(game,pid)?.gold<700?'gain100':'lose200'};break;
     case'grudge': pid=q.targetId; payload={accept:Math.random()<0.55,payerId:chooseTarget(game,playerById(game,q.targetId),'noble')?.id};break;
     case'loyaltyPledge': pid=q.targetId; payload={ack:true};break;
-    case'loyalty': pid=q.targetId; payload={choice:'accept'};break;
+    case'loyalty': pid=q.targetId; payload={choice:Math.random()<0.7?'payActor':'forceKing'};break;
     case'tithe': pid=q.targetId; payload={payerId:chooseTarget(game,playerById(game,q.targetId),'noble')?.id};break;
     case'bendKnee': pid=q.targetId; payload={accept:playerById(game,pid)?.gold<300||Math.random()<0.65};break;
     case'anchor': pid=q.targetId; payload={choice:playerById(game,pid)?.gold>900?'lose100ToOther':'lose200'};break;
