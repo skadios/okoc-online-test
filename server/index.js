@@ -7,6 +7,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {createGame, action, publicState, playerById, tick, inspectKnight} from './game-engine.js';
 import {mountDevApi} from './dev-api.js';
+import {mountTutorialApi} from './tutorial-api.js';
 
 const __dirname=path.dirname(fileURLToPath(import.meta.url));
 const app=express();
@@ -40,6 +41,8 @@ app.get('/api/rooms',(_,res)=>res.json([...rooms.values()].filter(r=>r.public&&r
 // DEV is a local/development tool. Never expose its control API on a production deployment
 // unless the operator explicitly opts in.
 if(process.env.NODE_ENV!=='production' || process.env.OKOC_DEV_MODE==='1')mountDevApi(app);
+// The tutorial is a first-class test-build feature and uses local rule-based bots only.
+mountTutorialApi(app);
 if(fs.existsSync(clientDist)){app.use(express.static(clientDist));app.get('/dev',(_,res)=>res.sendFile(path.join(clientDist,'dev.html')));app.get('/{*splat}',(_,res)=>res.sendFile(path.join(clientDist,'index.html')))}
 
 function send(ws,msg){if(ws?.readyState===1)ws.send(JSON.stringify(msg));}
