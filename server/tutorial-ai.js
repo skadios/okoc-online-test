@@ -344,9 +344,9 @@ export async function runBotStep(game){
     try{
       if(card.effect==='knight'){
         const target=chooseTarget(game,bot,'noble');
-        if(target){action(game,bot.id,{type:'placeKnight',instanceId:card.instanceId,targetId:target.id,actionId:`tutorial-1790867780170-0.679336053524546`});return true;}
+        if(target){action(game,bot.id,{type:'placeKnight',instanceId:card.instanceId,targetId:target.id,actionId:`tutorial-${Date.now()}-${Math.random()}`});return true;}
       }else if(payload!==null){
-        action(game,bot.id,{type:'playCard',instanceId:card.instanceId,payload,actionId:`tutorial-1790867780170-0.9482665562866477`});
+        action(game,bot.id,{type:'playCard',instanceId:card.instanceId,payload,actionId:`tutorial-${Date.now()}-${Math.random()}`});
         return true;
       }
     }catch{}
@@ -355,7 +355,7 @@ export async function runBotStep(game){
   const fallback=bot.hand.find(c=>c.side===bot.role);
   if(fallback&&target){
     try{
-      action(game,bot.id,{type:'placeKnight',instanceId:fallback.instanceId,targetId:target.id,actionId:`tutorial-1790867780170-0.5016008113449372`});
+      action(game,bot.id,{type:'placeKnight',instanceId:fallback.instanceId,targetId:target.id,actionId:`tutorial-${Date.now()}-${Math.random()}`});
       return true;
     }catch{}
   }
