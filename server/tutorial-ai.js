@@ -145,9 +145,10 @@ function actorCanResolveWithoutHuman(game,q){
   const ids=[];
   // Some pending actions are specifically resolved by the selected target,
   // so a human card-player does not block the bot's response.
-  if(['subRosa','meatRoll','weRide','suppressRebellion'].includes(q.type) && q.actorId)ids.push(q.actorId);
+  if(q.type==='subRosa' && q.actorId)ids.push(q.actorId);
   if(q.targetId)ids.push(q.targetId);
   if(q.rollPlayerId)ids.push(q.rollPlayerId);
+  if(q.rollPlayers)ids.push(...q.rollPlayers);
   if(q.currentVoterId)ids.push(q.currentVoterId);
   if(q.aId)ids.push(q.aId);
   if(q.bId)ids.push(q.bId);
