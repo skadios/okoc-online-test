@@ -1,0 +1,130 @@
+/* OKOC ONLINE — immersive motion layer
+   Deliberately stays within the existing brutalist red / black / white language. */
+:root{--okoc-red:#f00008;--okoc-ink:#050505;--okoc-paper:#f4f0e7;--okoc-white:#fff;--okoc-ease:cubic-bezier(.2,.85,.2,1)}
+
+/* Global entrance: the interface feels like a physical game table coming alive. */
+.game-screen{animation:okocScreenIn .45s var(--okoc-ease) both}
+.game-top{animation:okocDrop .5s var(--okoc-ease) both;box-shadow:8px 8px 0 #000}
+.game-top-stats>div,.game-top-stats>.terminal-trigger{animation:okocRise .55s var(--okoc-ease) both}
+.game-top-stats>div:nth-child(2){animation-delay:.06s}.game-top-stats>div:nth-child(3){animation-delay:.12s}.game-top-stats>.terminal-trigger{animation-delay:.18s}
+
+/* Turn state is deliberately impossible to miss. */
+.turn-banner{position:relative;overflow:hidden;isolation:isolate;box-shadow:6px 6px 0 #000;animation:okocBanner .42s var(--okoc-ease) both}
+.turn-banner:before{content:"";position:absolute;inset:0 auto 0 0;width:5px;background:#fff;z-index:-1;transform-origin:left;animation:okocSweep 1.1s var(--okoc-ease) infinite alternate}
+.turn-banner.mine{box-shadow:8px 8px 0 #000,0 0 0 2px rgba(255,255,255,.12)}
+.turn-banner.mine strong{animation:okocTextPulse 1.6s ease-in-out infinite}
+
+/* The table becomes a stage rather than a flat container. */
+.table-stage{box-shadow:9px 9px 0 #000;animation:okocTableIn .6s var(--okoc-ease) both;transform-origin:50% 30%}
+.table-stage:after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 50% 45%,rgba(240,0,8,.10),transparent 38%);mix-blend-mode:multiply;opacity:.55;animation:okocTableBreath 4s ease-in-out infinite}
+.table-title{animation:okocStamp .7s .1s var(--okoc-ease) both;transform-origin:left top}
+.table-materials{animation:okocRise .55s .2s var(--okoc-ease) both}
+
+/* Players physically react to the current turn. */
+.seat{transition:transform .22s var(--okoc-ease),box-shadow .22s var(--okoc-ease),filter .22s ease;animation:okocSeatIn .5s var(--okoc-ease) both}
+.seat:nth-child(2){animation-delay:.05s}.seat:nth-child(3){animation-delay:.1s}.seat:nth-child(4){animation-delay:.15s}.seat:nth-child(5){animation-delay:.2s}.seat:nth-child(6){animation-delay:.25s}.seat:nth-child(7){animation-delay:.3s}.seat:nth-child(8){animation-delay:.35s}
+.seat:hover{transform:translateY(-4px);z-index:5}
+.seat.active{transform:translateY(-6px) scale(1.018);box-shadow:0 0 0 3px #fff,8px 8px 0 #000;animation:okocActiveSeat 1.5s ease-in-out infinite}
+.seat.self{transition:box-shadow .2s ease,transform .2s ease}
+.seat.king-seat{position:relative}
+.seat.king-seat:after{content:"♛";position:absolute;right:8px;top:6px;color:var(--okoc-red);font-size:1.1rem;animation:okocCrown 1.8s ease-in-out infinite}
+.active-dot{animation:okocDot .9s ease-in-out infinite alternate}
+
+/* Figures subtly look around the table. */
+.figure{transition:transform .25s var(--okoc-ease),filter .25s ease}
+.seat:hover .figure{transform:translateY(-3px)}
+.king-center .figure{animation:okocKingFloat 3.2s ease-in-out infinite}
+
+/* Hand = physical cards. Staggering makes a newly dealt hand feel dealt. */
+.hand-grid{perspective:900px;scroll-behavior:smooth}
+.physical-card{transform-origin:50% 100%;animation:okocCardDeal .5s var(--okoc-ease) both;transition:transform .22s var(--okoc-ease),filter .22s ease,box-shadow .22s ease}
+.physical-card:nth-child(1){animation-delay:.02s}.physical-card:nth-child(2){animation-delay:.05s}.physical-card:nth-child(3){animation-delay:.08s}.physical-card:nth-child(4){animation-delay:.11s}.physical-card:nth-child(5){animation-delay:.14s}.physical-card:nth-child(6){animation-delay:.17s}.physical-card:nth-child(7){animation-delay:.20s}.physical-card:nth-child(8){animation-delay:.23s}
+.physical-card:hover{transform:translateY(-14px) rotate(-1deg) scale(1.035);filter:brightness(1.05);box-shadow:8px 12px 0 var(--okoc-red)}
+.physical-card.selected{animation:okocSelectedCard .9s ease-in-out infinite alternate;z-index:4}
+.physical-card.unavailable{filter:grayscale(.65) brightness(.68);opacity:.62;cursor:not-allowed}
+.physical-card.unavailable:hover{transform:translateY(-3px) scale(1.01);box-shadow:4px 4px var(--okoc-red)}
+.selected-card{animation:okocSelectionIn .35s var(--okoc-ease) both;box-shadow:8px 8px 0 #000}
+.preview-animated img{animation:okocCardTilt 2.8s ease-in-out infinite}
+
+/* Game events: cards appear to land on the table, notifications punch in. */
+.card-event-banner,.notification-center,.game-notification,.card-event,.table-card-landing{animation:okocEventPunch .48s var(--okoc-ease) both}
+.table-card-landing{filter:drop-shadow(10px 10px 0 #000);animation:okocCardLand .72s var(--okoc-ease) both}
+.table-card-landing img{animation:okocCardFlip .8s var(--okoc-ease) both}
+
+/* Decision windows feel like a deliberate game moment, not an error popup. */
+.modal-backdrop{animation:okocBackdrop .22s ease both;backdrop-filter:blur(2px)}
+.game-modal{animation:okocModalIn .42s var(--okoc-ease) both}
+.pending-modal.interactive{box-shadow:12px 12px 0 var(--okoc-red),0 0 0 3px #000;animation:okocDecisionIn .48s var(--okoc-ease) both}
+.pending-modal.spectator{animation:okocSpectatorIn .38s var(--okoc-ease) both}
+.pending-card-head img{animation:okocCardReveal .65s var(--okoc-ease) both}
+.decision-buttons button,.target-list button,.option-row button{transition:transform .16s var(--okoc-ease),box-shadow .16s ease}
+.decision-buttons button:hover,.target-list button:hover,.option-row button:hover{transform:translateY(-3px);box-shadow:4px 4px 0 #000}
+.pending-die-button{position:relative;overflow:hidden;transition:transform .2s var(--okoc-ease),box-shadow .2s ease}
+.pending-die-button:hover{transform:translateY(-4px) rotate(-2deg);box-shadow:7px 7px 0 #000}
+.pending-die-button:active{transform:scale(.94) rotate(8deg)}
+
+/* Dice: every roll has a visual rhythm even before the result arrives. */
+.dice-overlay,.dice-roll-overlay,.roll-animation,.dice-prompt{animation:okocDiceBackdrop .25s ease both}
+.dice,.die{transition:transform .2s ease;transform-origin:center}
+.die:hover{transform:scale(1.08) rotate(8deg)}
+
+/* Negotiation gets a living countdown. */
+.negotiation-bar{box-shadow:8px 8px 0 #000;animation:okocNegotiationIn .45s var(--okoc-ease) both}
+.negotiation-bar b{animation:okocTimerPulse 1s ease-in-out infinite}
+.negotiation-tools button:hover{transform:translateY(-2px);box-shadow:4px 4px 0 var(--okoc-red)}
+
+/* Logs and chat feel like a stream of reactions. */
+.scroll-log p{animation:okocLogIn .3s var(--okoc-ease) both}
+.chat-log p{transition:background .2s ease,padding-left .2s ease}
+.chat-log p:hover{background:#1b1b1b;padding-left:8px}
+.chat-box input:focus{box-shadow:0 0 0 3px var(--okoc-red);outline:none}
+
+/* Progress and material panels get small physical feedback. */
+.turn-progress-panel,.material-row,.effects-strip{animation:okocRise .5s .15s var(--okoc-ease) both}
+.progress-track i{transition:width .55s var(--okoc-ease)}
+.material-row>div{transition:transform .18s var(--okoc-ease),box-shadow .18s ease}
+.material-row>div:hover{transform:translateY(-3px);box-shadow:5px 5px 0 var(--okoc-red)}
+
+/* King reveal: dramatic but still consistent with the game's graphic language. */
+.king-reveal,.king-reveal-overlay,.reveal-crown{animation:okocReveal .7s var(--okoc-ease) both}
+.king-reveal .figure-king{animation:okocCrownReveal 1.4s ease-in-out infinite}
+
+/* Mobile: preserve hierarchy, reduce motion only when the OS requests it. */
+@media(max-width:900px){
+ .game-screen{padding:8px}.game-top{position:sticky;top:0;z-index:60}.game-top-stats{gap:8px}.game-top-stats>div:nth-child(2){display:none}.table-stage{min-height:470px}.seats{left:8px;right:8px;gap:5px}.seat{grid-template-columns:44px 1fr;min-height:96px;padding:5px}.seat .figure-noble{transform:scale(.8);transform-origin:center}.seat b{font-size:.65rem}.seat-meta{display:none}.knight-indicators{max-width:100%}.game-main{grid-template-columns:1fr}.side-panels{grid-template-columns:1fr 1fr;grid-template-rows:none}.physical-card{flex-basis:112px}.selected-card{flex-direction:column}.selected-actions{flex-wrap:wrap}.material-row{grid-template-columns:repeat(4,1fr)}.material-row>div{min-height:60px}.material-row img{height:42px;width:30px}.table-title{font-size:1.4rem}}
+@media(max-width:600px){.side-panels{grid-template-columns:1fr}.table-stage{min-height:430px}.king-center{top:24px}.king-center .figure-king{transform:scale(.72)}.seats{bottom:8px;grid-template-columns:repeat(2,1fr)}.seat{min-height:86px}.material-row{grid-template-columns:repeat(2,1fr)}.game-top h1{font-size:1.1rem}.game-top .eyebrow{display:none}.game-phase b{font-size:.7rem}.game-phase small{font-size:.42rem}}
+
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}}
+
+@keyframes okocScreenIn{from{opacity:0}to{opacity:1}}
+@keyframes okocDrop{from{opacity:0;transform:translateY(-18px)}to{opacity:1;transform:none}}
+@keyframes okocRise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes okocBanner{from{opacity:0;transform:translateX(-22px)}to{opacity:1;transform:none}}
+@keyframes okocSweep{from{transform:scaleY(.2)}to{transform:scaleY(1)}}
+@keyframes okocTextPulse{0%,100%{letter-spacing:normal}50%{letter-spacing:.035em}}
+@keyframes okocTableIn{from{opacity:0;transform:scale(.985) translateY(10px)}to{opacity:1;transform:none}}
+@keyframes okocTableBreath{0%,100%{opacity:.25}50%{opacity:.7}}
+@keyframes okocStamp{from{opacity:0;transform:scale(.8) rotate(-3deg)}to{opacity:1;transform:none}}
+@keyframes okocSeatIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes okocActiveSeat{0%,100%{box-shadow:0 0 0 3px #fff,8px 8px 0 #000}50%{box-shadow:0 0 0 6px var(--okoc-red),10px 10px 0 #000}}
+@keyframes okocDot{from{transform:scale(.9)}to{transform:scale(1.15)}}
+@keyframes okocCrown{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-3px) rotate(2deg)}}
+@keyframes okocKingFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes okocCardDeal{from{opacity:0;transform:translateY(24px) rotateX(35deg) rotateZ(-3deg)}to{opacity:1;transform:none}}
+@keyframes okocSelectedCard{from{box-shadow:4px 4px 0 var(--okoc-red)}to{box-shadow:8px 8px 0 #fff,8px 8px 0 var(--okoc-red)}}
+@keyframes okocSelectionIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes okocCardTilt{0%,100%{transform:rotate(-1deg)}50%{transform:rotate(1deg) translateY(-2px)}}
+@keyframes okocEventPunch{from{opacity:0;transform:scale(.94) translateY(-8px)}60%{transform:scale(1.02)}to{opacity:1;transform:none}}
+@keyframes okocCardLand{0%{opacity:0;transform:translateY(-70px) rotate(-8deg) scale(.8)}55%{opacity:1;transform:translateY(7px) rotate(3deg) scale(1.04)}75%{transform:translateY(-3px) rotate(-1deg) scale(1.01)}to{transform:none}}
+@keyframes okocCardFlip{from{transform:rotateY(90deg) scale(.85)}to{transform:none}}
+@keyframes okocBackdrop{from{opacity:0}to{opacity:1}}
+@keyframes okocModalIn{from{opacity:0;transform:translateY(22px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes okocDecisionIn{from{opacity:0;transform:scale(.88) translateY(20px)}65%{transform:scale(1.025)}to{opacity:1;transform:none}}
+@keyframes okocSpectatorIn{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:none}}
+@keyframes okocCardReveal{from{opacity:0;transform:translateX(-18px) rotateY(75deg)}to{opacity:1;transform:none}}
+@keyframes okocDiceBackdrop{from{opacity:0}to{opacity:1}}
+@keyframes okocNegotiationIn{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:none}}
+@keyframes okocTimerPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+@keyframes okocLogIn{from{opacity:0;transform:translateX(8px)}to{opacity:1;transform:none}}
+@keyframes okocReveal{from{opacity:0;transform:scale(1.05)}to{opacity:1;transform:none}}
+@keyframes okocCrownReveal{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-8px) rotate(1deg)}}
