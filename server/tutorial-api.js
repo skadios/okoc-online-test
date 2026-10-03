@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 import {createGame, action, publicState, playerById, tick, drawToMinimum} from './game-engine.js';
-import {runBotStep, BOT_IDS, HUMAN_ID} from './tutorial-ai.js';
+import {runHumanBotStep, BOT_IDS, HUMAN_ID} from './human-ai.js';
 
 let tutorialGame=null;
 let aiBusy=false;
@@ -17,10 +17,6 @@ const makePlayers=()=>[
 function normalizeTutorialHands(){
   if(!tutorialGame)return;
   for(const player of tutorialGame.players){
-    // The physical rules keep every hand at 8 cards after a turn. Some card
-    // effects can draw cards during a turn, so the engine's fixed end-turn
-    // draw may temporarily produce 9+ cards. Never expose an over-sized hand
-    // in the tutorial: discard only the excess, then refill short hands.
     while(player.hand.length>8){
       const excess=player.hand.pop();
       if(excess)tutorialGame.discard.push(excess);
@@ -96,23 +92,20 @@ function scheduleBots(){
     if(aiBusy)return scheduleBots();
     aiBusy=true;
     try{
-      const acted=await runBotStep(tutorialGame);
+      const acted=await runHumanBotStep(tutorialGame);
       tick(tutorialGame);
       normalizeTutorialHands();
-      // Human-speed rhythm: never chain bot actions instantly.
-      const delay=acted?(900+Math.floor(Math.random()*900)):450;
-      if(tutorialGame.phase==='negotiation'){
-        scheduleNegotiationBots();
-      }else scheduleBotsWithDelay(delay);
+      const delay=acted?(800+Math.floor(Math.random()*1100)):650;
+      if(tutorialGame.phase==='negotiation')scheduleNegotiationBots();
+      else scheduleBotsWithDelay(delay);
     }catch(e){
       console.error('[OKOC TUTORIAL AI]',e);
-      scheduleBotsWithDelay(1200);
+      scheduleBotsWithDelay(1400);
     }finally{aiBusy=false;}
-  },450);
+  },500);
 }
 function scheduleBotsWithDelay(delay){if(aiTimer)clearTimeout(aiTimer);const generation=tutorialGeneration;aiTimer=setTimeout(()=>{if(generation===tutorialGeneration)scheduleBots()},delay);}
 function scheduleNegotiationBots(){
-  // Bots make occasional human-speed offers/transfers. The human can then end the phase.
   if(aiTimer)clearTimeout(aiTimer);
   const generation=tutorialGeneration;
   aiTimer=setTimeout(()=>{
@@ -121,9 +114,8 @@ function scheduleNegotiationBots(){
     const bot=bots().find(p=>BOT_IDS.has(p.id)&&p.gold>=100);
     const target=bot?playerById(tutorialGame,'tutorial-1'):null;
     if(bot&&target&&Math.random()<0.65){
-      try{action(tutorialGame,bot.id,{type:'negotiateGold',targetId:target.id,amount:100,actionId:`tutorial-neg-${Date.now()}`});}catch{}
+      try{action(tutorialGame,bot.id,{type:'negotiateGold',targetId:target.id,amount:100,actionId:`tutorial-neg-${Date.now()}-${Math.random()}`});}catch{}
     }
-    // Every bot votes to move on; the human gets the final visible choice.
     tutorialGame.negotiation.earlyVotes=tutorialGame.negotiation.earlyVotes||{};
     for(const id of BOT_IDS)tutorialGame.negotiation.earlyVotes[id]=true;
     scheduleNegotiationBots();
