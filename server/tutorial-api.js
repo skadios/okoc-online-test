@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import {createGame, action, publicState, playerById, tick} from './game-engine.js';
+import {createGame, action, publicState, playerById, tick, drawToMinimum} from './game-engine.js';
 import {runBotStep, BOT_IDS, HUMAN_ID} from './tutorial-ai.js';
 
 let tutorialGame=null;
@@ -13,6 +13,21 @@ const makePlayers=()=>[
   {id:'tutorial-3',name:'Béatrice',connected:true},
   {id:'tutorial-4',name:'Charles',connected:true}
 ];
+
+function normalizeTutorialHands(){
+  if(!tutorialGame)return;
+  for(const player of tutorialGame.players){
+    // The physical rules keep every hand at 8 cards after a turn. Some card
+    // effects can draw cards during a turn, so the engine's fixed end-turn
+    // draw may temporarily produce 9+ cards. Never expose an over-sized hand
+    // in the tutorial: discard only the excess, then refill short hands.
+    while(player.hand.length>8){
+      const excess=player.hand.pop();
+      if(excess)tutorialGame.discard.push(excess);
+    }
+    if(player.hand.length<8)drawToMinimum(tutorialGame,player);
+  }
+}
 
 function guide(game){
   const human=playerById(game,HUMAN_ID);
@@ -68,6 +83,7 @@ function guide(game){
 function response(){
   if(!tutorialGame)return null;
   tick(tutorialGame);
+  normalizeTutorialHands();
   const state=publicState(tutorialGame,HUMAN_ID);
   return {state:{...state,room:{code:'TUTO',name:'TUTORIEL · 4 JOUEURS',public:false,max:4,lang:'fr'},tutorial:guide(tutorialGame)}};
 }
@@ -82,6 +98,7 @@ function scheduleBots(){
     try{
       const acted=await runBotStep(tutorialGame);
       tick(tutorialGame);
+      normalizeTutorialHands();
       // Human-speed rhythm: never chain bot actions instantly.
       const delay=acted?(900+Math.floor(Math.random()*900)):450;
       if(tutorialGame.phase==='negotiation'){
@@ -120,6 +137,7 @@ export function mountTutorialApi(app){
       tutorialGeneration++;
       if(aiTimer)clearTimeout(aiTimer);
       tutorialGame=createGame(makePlayers(),Math.random);
+      normalizeTutorialHands();
       scheduleBots();
       res.json(response());
     }catch(e){res.status(500).json({error:e?.message||'Tutorial start failed'});}
@@ -142,6 +160,7 @@ export function mountTutorialApi(app){
       }else{
         action(tutorialGame,HUMAN_ID,{...msg,actionId:String(msg.actionId||crypto.randomUUID())});
       }
+      normalizeTutorialHands();
       scheduleBots();
       res.json(response());
     }catch(e){res.status(400).json({error:e?.message||'Invalid tutorial action'});}
