@@ -2,7 +2,7 @@ import {action, playerById, tick} from './game-engine.js';
 import {CARD_MAP} from '../shared/cards.js';
 
 const BOT_IDS=new Set(['tutorial-2','tutorial-3','tutorial-4']);
-const humanId(game)='tutorial-1';
+const HUMAN_ID='tutorial-1';
 const getBotIds=game=>game?game._botIds||BOT_IDS:BOT_IDS;
 const isBot=(game,id)=>getBotIds(game).has(id);
 const humanId=game=>game?game._humanId||HUMAN_ID:HUMAN_ID;
