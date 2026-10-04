@@ -470,3 +470,82 @@
   .tutorial-coach{bottom:.6rem;width:calc(100vw - 1rem);padding:.85rem;}
   .tutorial-coach p{font-size:.82rem;}
 }
+
+
+/* V39 — lobby bot controls / exit flow */
+.lobby-actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  align-items:center;
+}
+.leave-lobby{
+  background:#111!important;
+  color:#fff!important;
+  border:3px solid #fff!important;
+}
+.bot-control{
+  border:3px solid #fff;
+  background:#111;
+  padding:9px;
+  display:grid;
+  gap:7px;
+}
+.bot-control>span{
+  font-size:.48rem;
+  font-weight:900;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+}
+.bot-control>div{
+  display:grid;
+  grid-template-columns:1fr 44px 1fr;
+  gap:5px;
+}
+.bot-control button{
+  border:2px solid #fff;
+  background:#f00008;
+  color:#fff;
+  padding:8px;
+  font-size:.5rem;
+  font-weight:900;
+}
+.bot-control button:disabled{
+  opacity:.35;
+  cursor:not-allowed;
+}
+.bot-control strong{
+  display:grid;
+  place-items:center;
+  border:2px solid #fff;
+  background:#000;
+  font-size:.75rem;
+}
+.player-list article.bot-row{
+  background:#111;
+}
+.player-list article.bot-row .avatar{
+  background:#f00008;
+  color:#fff;
+  font-size:.55rem;
+}
+.player-list article .bot-remove{
+  margin-left:auto;
+  border:2px solid #fff;
+  background:#f00008;
+  color:#fff;
+  padding:6px 7px;
+  font-size:.42rem;
+  font-weight:900;
+}
+.form-hint{
+  margin:10px 0 0;
+  font-size:.5rem;
+  font-weight:900;
+  color:#aaa;
+  letter-spacing:.04em;
+}
+@media(max-width:700px){
+  .lobby-actions button{flex:1;min-height:42px}
+  .bot-control>div{grid-template-columns:1fr 42px 1fr}
+}
