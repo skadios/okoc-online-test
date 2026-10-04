@@ -139,7 +139,7 @@ test('Helping Hand first-card limits follow the printed special cases',()=>{
   assert.equal(noble.extraPlays,1); // 3 nobles: 3 follow-up cards
 });
 
-test('Sub Rosa replaces a stolen/discarded hand card and the actor still draws 2 at turn end',()=>{
+test('Sub Rosa replaces a stolen/discarded hand card and the actor refills to 8 at turn end',()=>{
   const g=fresh();
   const actor=put(g,'sub-rosa');
   const target=nobleOther(g,actor);
@@ -156,7 +156,7 @@ test('Sub Rosa replaces a stolen/discarded hand card and the actor still draws 2
   actor.hand.push(filler);
   assert.equal(actor.playedThisTurn,1);
   playCard(g,actor.id,filler.instanceId,{});
-  assert.equal(actor.hand.length,3); // 1 before second card - 1 played + 2 normal end-of-turn draws
+  assert.equal(actor.hand.length,8); // turn end restores the standard 8-card hand
 });
 
 test('Face-down Knights cannot be inspected by their recipient in the online game',()=>{
