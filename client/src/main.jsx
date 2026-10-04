@@ -119,7 +119,7 @@ function statusText(t,status){if(status.ok)return '';return status.reason==='tur
 export function Game({t,lang,state,me,goHome,selected,setSelected,send,chat,setChat,peek,setPeek,privateKnight,setPrivateKnight,tradeOffer,setTradeOffer}){
  const card=state.hand.find(c=>c.instanceId===selected);
  const[lastEvent,setLastEvent]=useState('');const lastLogRef=useRef('');const[lastCardEvent,setLastCardEvent]=useState(null);const lastCardEventRef=useRef('');const[rollAnimation,setRollAnimation]=useState(null);const[rollQueue,setRollQueue]=useState([]);const rollEventRef=useRef(state.rollEventId||0);const[dicePrompt,setDicePrompt]=useState(null);
- const myTurn=state.currentPlayerId===me?.id;const king=state.players.find(p=>p.id===state.kingId);
+ const myTurn=state.currentPlayerId===me?.id;const king=state.players.find(p=>p.id===state.kingId);const kingIdRef=useRef(state.kingId);const myGoldRef=useRef(me?.gold??0);
  const[modal,setModal]=useState(null),[targets,setTargets]=useState([]),[amount,setAmount]=useState(100),[mode,setMode]=useState('');
  const[tradeTarget,setTradeTarget]=useState(''),[tradeGive,setTradeGive]=useState('');const[terminalOpen,setTerminalOpen]=useState(false);const[discardPulse,setDiscardPulse]=useState(false);const[mobileView,setMobileView]=useState('table');const[soundEnabled,setSoundEnabled]=useState(()=>localStorage.getItem('okocSound')!=='0');const discardCountRef=useRef(state.discard?.length||0);
  const[,setClock]=useState(0);
@@ -134,7 +134,9 @@ export function Game({t,lang,state,me,goHome,selected,setSelected,send,chat,setC
  useEffect(()=>{const events=(state.rollEvents||[]).filter(e=>e.id>rollEventRef.current);if(!events.length)return;rollEventRef.current=Math.max(...events.map(e=>e.id));setRollQueue(queue=>[...queue,...events]);playUiSound('roll')},[state.rollEvents,playUiSound]);
  useEffect(()=>{if(!rollQueue.length){setRollAnimation(null);return}const event=rollQueue[0];const latest=[...(state.cardEvents||[])].reverse().find(x=>x.cardId);const cardId=event.cardId!==undefined?event.cardId:(state.pending?.cardId||latest?.cardId||null);const actorId=state.pending?.actorId||latest?.actorId||null;const actorRole=state.players.find(p=>p.id===actorId)?.role||null;const recent=[...(state.log||[])].reverse().find(x=>/roll|rolled|a obtenu|dé|dés|dice|resolved with a|résolue avec un|contested the crown|disputé la couronne/i.test(`${x.en||''} ${x.fr||''}`));setRollAnimation({...event,cardId,actorRole,caption:recent?(lang==='fr'?recent.fr:recent.en):''})},[rollQueue[0]?.id,lang]);
  useEffect(()=>{setTargets([]);setMode('');if(!state.pending){setPeek(null);setPrivateKnight(null)}},[state.pending,setPeek,setPrivateKnight]);
- useEffect(()=>{if(state.kingId!==king?.id)playUiSound('crown')},[state.kingId,king?.id,playUiSound]);
+ useEffect(()=>{if(kingIdRef.current!==state.kingId){kingIdRef.current=state.kingId;playUiSound('crown')}},[state.kingId,playUiSound]);
+ useEffect(()=>{const gold=me?.gold??0;if(gold!==myGoldRef.current&&Math.abs(gold-myGoldRef.current)>=100){playUiSound('gold')}myGoldRef.current=gold},[me?.gold,playUiSound]);
+ useEffect(()=>{if(state.negotiation&&[60,30,15,10,5].includes(timeLeft))playUiSound('sand')},[state.negotiation?.endsAt,timeLeft,playUiSound]);
  const play=()=>{
    if(!card)return;const status=cardPlayStatus(card,state,me);if(!status.ok)return;
    setPeek(null);setPrivateKnight(null);
