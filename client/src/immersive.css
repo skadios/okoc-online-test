@@ -429,3 +429,31 @@
 @media(prefers-reduced-motion:reduce){
   .game-top,.turn-banner,.polished-table,.seat,.king-center .figure-king{animation:none!important}
 }
+
+
+/* V37 — make turn direction self-explanatory instead of a bare reload-like icon */
+.game-top-stats>.direction{
+  display:grid;
+  grid-template-columns:auto auto;
+  align-items:center;
+  gap:5px;
+  border:0!important;
+  padding-left:10px;
+  min-width:54px;
+}
+.game-top-stats>.direction span{
+  color:var(--okoc-red);
+  font-size:1.6rem;
+  line-height:1;
+}
+.game-top-stats>.direction small{
+  display:block;
+  color:#aaa;
+  font:900 .36rem/1.1 Arial,sans-serif;
+  letter-spacing:.05em;
+  text-transform:uppercase;
+  max-width:42px;
+}
+@media(max-width:900px){
+  .game-top-stats>.direction{display:none}
+}
