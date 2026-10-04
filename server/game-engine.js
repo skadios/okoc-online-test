@@ -650,7 +650,7 @@ function finishPending(game,actor,pending){
   }
   actor.playedThisTurn++;
   const limit=(actor.role==='king'?(game.players.length===4?2:3):2)+actor.extraPlays;
-  if(actor.playedThisTurn>=limit){drawExact(game,actor,2);actor.playedThisTurn=0;actor.extraPlays=0;expireAfterTurn(game,actor.id);game.turnSerial=(game.turnSerial||0)+1;const next=nextSeat(game,actor.id);if(next&&next.id===game.kingId){if(game.round===4){game.phase='gameover';log(game,`${king(game)?.name||'The King'} is King after round 4.`,`${king(game)?.name||'Le Roi'} est Roi après le round 4.`);}else beginNegotiation(game);}else if(next){game.currentPlayerId=next.id;}}
+  if(actor.playedThisTurn>=limit){drawToMinimum(game,actor);actor.playedThisTurn=0;actor.extraPlays=0;expireAfterTurn(game,actor.id);game.turnSerial=(game.turnSerial||0)+1;const next=nextSeat(game,actor.id);if(next&&next.id===game.kingId){if(game.round===4){game.phase='gameover';log(game,`${king(game)?.name||'The King'} is King after round 4.`,`${king(game)?.name||'Le Roi'} est Roi après le round 4.`);}else beginNegotiation(game);}else if(next){game.currentPlayerId=next.id;}}
   addCardEvent(game,'resolved',actor,card,before);
 }
 
