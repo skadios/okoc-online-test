@@ -365,4 +365,4 @@ export async function runBotStep(game){
   return false;
 }
 
-export {BOT_IDS,humanId(game)};
+export {BOT_IDS,HUMAN_ID};
