@@ -8,6 +8,7 @@ import {fileURLToPath} from 'node:url';
 import {createGame, action, publicState, playerById, tick, inspectKnight} from './game-engine.js';
 import {mountDevApi} from './dev-api.js';
 import {mountTutorialApi} from './tutorial-api.js';
+import {runHumanBotStep} from './human-ai.js';
 
 const __dirname=path.dirname(fileURLToPath(import.meta.url));
 const app=express();
@@ -30,6 +31,8 @@ const MAX_ROOMS=200;
 const WS_MESSAGES_PER_WINDOW=80;
 const WS_RATE_WINDOW_MS=10000;
 const roomActivity = new Map();
+const botTimers = new Map();
+const BOT_NAMES=['Armand','Béatrice','Charles','Diane','Émile','Félix','Gaspard'];
 const letters='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const uid=()=>crypto.randomBytes(32).toString('base64url');
 const roomCode=()=>{let c;do{c=Array.from({length:6},()=>letters[Math.floor(Math.random()*letters.length)]).join('')}while(rooms.has(c));return c};
@@ -52,7 +55,9 @@ function removePlayerSession(r,playerId){
   if(token){sessions.delete(token);r.tokens.delete(playerId);}
 }
 function markRoomActivity(r){roomActivity.set(r.code,Date.now());}
+function stopRoomBots(r){const timer=botTimers.get(r.code);if(timer)clearTimeout(timer);botTimers.delete(r.code);}
 function closeRoom(r){
+  stopRoomBots(r);
   for(const p of r.game?.players||[]){
     removePlayerSession(r,p.id);
     const socket=r.sockets.get(p.id);
@@ -60,7 +65,7 @@ function closeRoom(r){
   }
   r.sockets.clear();rooms.delete(r.code);roomActivity.delete(r.code);
 }
-function roomState(r,viewerId){const state=publicState(r.game,viewerId);state.players=state.players.map(p=>({...p,host:r.host===p.id}));return {room:{code:r.code,name:r.name,public:r.public,max:r.max,lang:r.lang},...state};}
+function roomState(r,viewerId){const state=publicState(r.game,viewerId);state.players=state.players.map(p=>({...p,host:r.host===p.id,isBot:!!p.isBot,ready:p.ready!==false}));return {room:{code:r.code,name:r.name,public:r.public,max:r.max,lang:r.lang},...state};}
 function broadcast(r){for(const p of r.game.players){send(r.sockets.get(p.id),{type:'state',state:roomState(r,p.id)});}}
 function broadcastError(ws,message){send(ws,{type:'error',message});}
 function sanitizeName(v){return String(v??'').normalize('NFKC').replace(/[\u0000-\u001f\u007f\u200b-\u200f\u202a-\u202e\u2060-\u206f]/g,'').trim().slice(0,24);}
@@ -80,7 +85,7 @@ function addLobbyPlayer(r,name){
   if(r.game && r.game.phase!=='lobby')throw new Error('The game has already started.');
   if(r.game?.players.length>=r.max)throw new Error('Room is full.');
   if(r.game?.players.some(p=>p.name.toLowerCase()===name.toLowerCase()))throw new Error('That name is already used.');
-  const p={id:crypto.randomUUID(),name,role:null,gold:0,hand:[],knights:[],effects:[],commitments:[],connected:true};
+  const p={id:crypto.randomUUID(),name,role:null,gold:0,hand:[],knights:[],effects:[],commitments:[],connected:true,ready:false,isBot:false};
   if(!r.game){r.game={phase:'lobby',players:[],seatOrder:[],log:[],chat:[],round:0,direction:1,currentPlayerId:null,kingId:null,kingDeck:[],nobleDeck:[],discard:[],pending:null,negotiation:null};}
   r.game.players.push(p);r.game.seatOrder.push(p.id);if(!r.host)r.host=p.id;return p;
 }
@@ -88,15 +93,24 @@ function startRoom(r,requesterId){
   if(r.host!==requesterId)throw new Error('Only the room admin can start the game.');
   if(r.game.players.length<4)throw new Error('At least 4 players are required.');
   const lobbyPlayers=r.game.players.map(p=>({id:p.id,name:p.name,connected:p.connected}));
+  const human=r.game.players.find(p=>!p.isBot);
+  const botIds=new Set(r.game.players.filter(p=>p.isBot).map(p=>p.id));
   const game=createGame(lobbyPlayers);
+  game._botIds=botIds;
+  game._humanId=human?.id||null;
   r.game=game;
-  // Preserve socket/session mappings.
-  for(const p of game.players){if(r.sockets.has(p.id))p.connected=true;}
+  for(const p of game.players){
+    const source=r.game.players.find(x=>x.id===p.id);
+    p.isBot=botIds.has(p.id);
+    p.ready=true;
+    if(r.sockets.has(p.id))p.connected=true;
+  }
+  scheduleRoomBots(r);
 }
 function removeLobbyPlayer(r,pid){
   if(r.game.phase!=='lobby')return;
   r.game.players=r.game.players.filter(p=>p.id!==pid);r.game.seatOrder=r.game.seatOrder.filter(id=>id!==pid);r.sockets.delete(pid);removePlayerSession(r,pid);
-  if(r.host===pid)r.host=r.game.players[0]?.id||null;
+  if(r.host===pid)r.host=r.game.players.find(p=>!p.isBot)?.id||r.game.players[0]?.id||null;
 }
 function sendPrivatePeek(ws,cards){send(ws,{type:'privatePeek',cards:cards.map(c=>({instanceId:c.instanceId,id:c.id,en:c.en,fr:c.fr,desc:c.desc}))});}
 function publicPendingNeedsPrivatePeek(game,playerId){return game.pending?.type==='subRosa' && game.pending.actorId===playerId;}
@@ -116,6 +130,43 @@ function handleGameAction(r,p,msg){
     send(r.sockets.get(p.id),{type:'privateKnight',...result,source:'owner'});
   }
 }
+function addLobbyBot(r){
+  if(r.game.phase!=='lobby')throw new Error('Bots can only be managed before the game starts.');
+  if(r.game.players.length>=r.max)throw new Error('Room is full.');
+  const existing=new Set(r.game.players.map(p=>p.name));
+  const name=BOT_NAMES.find(n=>!existing.has(n))||('BOT '+(r.game.players.filter(p=>p.isBot).length+1));
+  const index=r.game.players.filter(p=>p.isBot).length+1;
+  const p={id:`bot-${r.code}-${index}-${crypto.randomUUID().slice(0,6)}`,name,role:null,gold:0,hand:[],knights:[],effects:[],commitments:[],connected:true,ready:true,isBot:true};
+  r.game.players.push(p);r.game.seatOrder.push(p.id);return p;
+}
+function removeLobbyBot(r,pid){
+  if(r.game.phase!=='lobby')throw new Error('Bots can only be managed before the game starts.');
+  const target=r.game.players.find(p=>p.id===pid);
+  if(!target?.isBot)throw new Error('Only bots can be removed with this action.');
+  removeLobbyPlayer(r,pid);
+}
+async function runRoomBotStep(r){
+  if(!r.game || r.game.phase==='lobby'||r.game.phase==='gameover'||!r.game._botIds?.size)return false;
+  try{
+    const acted=await runHumanBotStep(r.game);
+    tick(r.game);
+    if(acted)broadcast(r);
+    return acted;
+  }catch(error){console.error('[OKOC BOT]',r.code,error);return false;}
+}
+function scheduleRoomBots(r,delay=850){
+  stopRoomBots(r);
+  if(!r.game?._botIds?.size)return;
+  const timer=setTimeout(async()=>{
+    botTimers.delete(r.code);
+    if(!rooms.has(r.code)||!r.game||r.game.phase==='gameover'||r.game.phase==='lobby')return;
+    const acted=await runRoomBotStep(r);
+    const nextDelay=r.game.pending?(acted?900:550): (r.game.phase==='negotiation'?2200:900+Math.floor(Math.random()*850));
+    scheduleRoomBots(r,nextDelay);
+  },delay);
+  botTimers.set(r.code,timer);
+}
+
 function adminAction(r,p,msg){
   if(r.host!==p.id)throw new Error('Only the room admin can do that.');
   if(r.game.phase!=='lobby')throw new Error('Room settings can only be changed before the game starts.');
@@ -130,6 +181,12 @@ function adminAction(r,p,msg){
     const target=getRoomPlayer(r,msg.playerId);if(!target)throw new Error('Player not found.');r.host=target.id;
   } else if(msg.type==='closeRoom'){
     closeRoom(r);return;
+  } else if(msg.type==='addBot'){
+    addLobbyBot(r);
+  } else if(msg.type==='removeBot'){
+    removeLobbyBot(r,msg.playerId);
+  } else if(msg.type==='leaveLobby'){
+    const leavingId=p.id;removeLobbyPlayer(r,leavingId);send(r.sockets.get(leavingId),{type:'leftRoom',message:'You left the lobby.'});return;
   } else if(msg.type==='start'){
     startRoom(r,p.id);
   }
@@ -177,7 +234,7 @@ wss.on('connection',(ws)=>{
         const text=String(msg.text||'').normalize('NFKC').replace(/[\u0000-\u001f\u007f\u200b-\u200f\u202a-\u202e\u2060-\u206f]/g,'').trim().slice(0,500);if(text){r.game.chat=r.game.chat||[];r.game.chat.push({id:crypto.randomUUID(),playerId:p.id,name:p.name,text,ts:Date.now()});r.game.chat=r.game.chat.slice(-100);}broadcast(r);return;
       }
       if(msg.type==='ready'){if(r.game.phase!=='lobby')throw new Error('The lobby is closed.');p.ready=!!msg.value;broadcast(r);return;}
-      if(['roomSettings','kick','transferHost','closeRoom','start'].includes(msg.type)){adminAction(r,p,msg);broadcast(r);return;}
+      if(['roomSettings','kick','transferHost','closeRoom','addBot','removeBot','leaveLobby','start'].includes(msg.type)){adminAction(r,p,msg);if(msg.type==='leaveLobby'){broadcast(r);return;}broadcast(r);return;}
       if(msg.type==='endNegotiation'){
         // The physical rules allow the group to move on early by mutual agreement; online, require all connected players to agree.
         if(r.game.phase!=='negotiation')throw new Error('Negotiation is not active.');
