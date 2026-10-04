@@ -360,7 +360,7 @@ function finishPlayedCard(game,actor,card,{discard=true,count=true}={}){
     // End-of-turn refill: the hand is restored to the standard 8-card hand.
     // Card effects may already have drawn cards during the turn, so drawing
     // by the number of plays would overdraw in those cases.
-    drawExact(game,actor,2);
+    drawToMinimum(game,actor);
     actor.playedThisTurn=0; actor.extraPlays=0;
     const endedTurnSerial=game.turnSerial;
     expireAfterTurn(game,actor.id);
