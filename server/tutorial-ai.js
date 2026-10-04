@@ -2,7 +2,10 @@ import {action, playerById, tick} from './game-engine.js';
 import {CARD_MAP} from '../shared/cards.js';
 
 const BOT_IDS=new Set(['tutorial-2','tutorial-3','tutorial-4']);
-const HUMAN_ID='tutorial-1';
+const humanId(game)='tutorial-1';
+const getBotIds=game=>game?game._botIds||BOT_IDS:BOT_IDS;
+const isBot=(game,id)=>getBotIds(game).has(id);
+const humanId=game=>game?game._humanId||HUMAN_ID:HUMAN_ID;
 const SAFE_EFFECTS=new Set([
   'bad_blood','beggars','divine','helping_king','hindsight','icarus','indebted',
   'isolation','loyalty','shadow_deal','subsidies','unprotected','wrath',
@@ -15,24 +18,24 @@ const COMPLEX_EFFECTS=new Set([
 ]);
 
 const wait=(ms)=>new Promise(resolve=>setTimeout(resolve,ms));
-const bots=game=>game.players.filter(p=>BOT_IDS.has(p.id));
+const bots=game=>game.players.filter(p=>isBot(game,p.id));
 const nobles=game=>game.players.filter(p=>p.role==='noble');
-const botNobles=game=>nobles(game).filter(p=>BOT_IDS.has(p.id));
+const botNobles=game=>nobles(game).filter(p=>isBot(game,p.id));
 const randomOf=(items,rng=gameRandom)=>items.length?items[Math.floor(rng()*items.length)]:null;
 const gameRandom=()=>Math.random();
 
 function rankedTargets(game,bot,kind='any'){
   let pool=game.players.filter(p=>p.id!==bot.id);
   if(kind==='noble')pool=pool.filter(p=>p.role==='noble');
-  if(kind==='bot')pool=pool.filter(p=>BOT_IDS.has(p.id));
-  if(kind==='botNoble')pool=pool.filter(p=>BOT_IDS.has(p.id)&&p.role==='noble');
+  if(kind==='bot')pool=pool.filter(p=>isBot(game,p.id));
+  if(kind==='botNoble')pool=pool.filter(p=>isBot(game,p.id)&&p.role==='noble');
   if(!pool.length)return [];
   return [...pool].sort((a,b)=>{
     const score=x=>{
       let s=0;
       if(x.role==='king')s+=kind==='noble'?-10:10;
       s+=x.gold;
-      if(x.id===HUMAN_ID)s+=80;
+      if(x.id===humanId(game))s+=80;
       if(x.id===bot.id)s-=10000;
       return s;
     };
@@ -44,7 +47,7 @@ function chooseTarget(game,bot,kind='any'){
   const pool=rankedTargets(game,bot,kind);
   if(!pool.length)return null;
   // Mostly sensible, occasionally imperfect: the bots should feel human rather than optimal.
-  if(pool.some(p=>p.id===HUMAN_ID)&&Math.random()<0.22)return pool.find(p=>p.id===HUMAN_ID);
+  if(pool.some(p=>p.id===humanId(game))&&Math.random()<0.22)return pool.find(p=>p.id===humanId(game));
   if(pool.length>1 && Math.random()<0.25)return pool[Math.floor(Math.random()*Math.min(3,pool.length))];
   return pool[0];
 }
@@ -154,7 +157,7 @@ function actorCanResolveWithoutHuman(game,q){
   if(q.bId)ids.push(q.bId);
   if(q.lowerId)ids.push(q.lowerId);
   if(q.higherId)ids.push(q.higherId);
-  return ids.every(id=>id!==HUMAN_ID);
+  return ids.every(id=>id!==humanId(game));
 }
 
 function respondPending(game){
@@ -165,10 +168,10 @@ function respondPending(game){
   // here so a tutorial game can never stop after the two bot rolls.
   if(q.type==='weRide'){
     if(q.stage==='rolling'){
-      const humanParticipant=q.aId===HUMAN_ID||q.bId===HUMAN_ID;
+      const humanParticipant=q.aId===humanId(game)||q.bId===humanId(game);
       const missing=[q.aId,q.bId].find(id=>q.rolls?.[id]==null);
-      if(missing===HUMAN_ID || (humanParticipant && !missing))return false;
-      if(missing && BOT_IDS.has(missing)){
+      if(missing===humanId(game) || (humanParticipant && !missing))return false;
+      if(missing && isBot(game,missing)){
         try{
           action(game,missing,{type:'decision',payload:{roll:true},actionId:`tutorial-we-ride-${Date.now()}-${Math.random()}`});
           return true;
@@ -180,7 +183,7 @@ function respondPending(game){
       return false;
     }
     if(q.stage==='lowerChoice'){
-      if(!BOT_IDS.has(q.lowerId))return false;
+      if(!isBot(game,q.lowerId))return false;
       try{
         action(game,q.lowerId,{type:'decision',payload:{choice:Math.random()<0.58?'full':'split'},actionId:`tutorial-we-ride-choice-${Date.now()}-${Math.random()}`});
         return true;
@@ -190,7 +193,7 @@ function respondPending(game){
       }
     }
     if(q.stage==='higherChoice'){
-      if(!BOT_IDS.has(q.higherId))return false;
+      if(!isBot(game,q.higherId))return false;
       try{
         action(game,q.higherId,{type:'decision',payload:{accept:Math.random()<0.52},actionId:`tutorial-we-ride-answer-${Date.now()}-${Math.random()}`});
         return true;
@@ -205,82 +208,82 @@ function respondPending(game){
   // Resolve multi-player decisions progressively. Bots may act even when the
   // human is one of the participants; only the human's own response should block.
   if(q.type==='actorsThank'){
-    const missingBot=game.players.find(p=>BOT_IDS.has(p.id)&&!(q.acks||{})[p.id]);
+    const missingBot=game.players.find(p=>isBot(game,p.id)&&!(q.acks||{})[p.id]);
     if(missingBot){action(game,missingBot.id,{type:'decision',payload:{},actionId:`tutorial-${Date.now()}-${Math.random()}`});return true;}
-    if(BOT_IDS.has(q.actorId)&&Object.keys(q.acks||{}).length>=game.players.length){
+    if(isBot(game,q.actorId)&&Object.keys(q.acks||{}).length>=game.players.length){
       const target=chooseTarget(game,playerById(game,q.actorId),'any');
       if(target){action(game,q.actorId,{type:'decision',payload:{targetId:target.id},actionId:`tutorial-${Date.now()}-${Math.random()}`});return true;}
     }
     return false;
   }
   if(q.type==='betrayalSupport'){
-    const missing=q.eligible?.find(id=>BOT_IDS.has(id)&&!q.supports.some(x=>x.playerId===id));
+    const missing=q.eligible?.find(id=>isBot(game,id)&&!q.supports.some(x=>x.playerId===id));
     if(missing){action(game,missing,{type:'decision',payload:{support:Math.random()<0.62},actionId:`tutorial-${Date.now()}-${Math.random()}`});return true;}
     return false;
   }
   if(q.type==='betrayKing'){
-    const missing=q.eligible?.find(id=>BOT_IDS.has(id)&&!q.supports.some(x=>x.playerId===id));
+    const missing=q.eligible?.find(id=>isBot(game,id)&&!q.supports.some(x=>x.playerId===id));
     if(missing){action(game,missing,{type:'decision',payload:{support:Math.random()<0.55},actionId:`tutorial-${Date.now()}-${Math.random()}`});return true;}
-    if(q.awaitRoll&&BOT_IDS.has(q.rollPlayerId)){
+    if(q.awaitRoll&&isBot(game,q.rollPlayerId)){
       action(game,q.rollPlayerId,{type:'decision',payload:{roll:true},actionId:`tutorial-${Date.now()}-${Math.random()}`});return true;
     }
     return false;
   }
   if(q.type==='council'){
     if(q.stage==='voting'){
-      const missing=q.eligible?.find(id=>BOT_IDS.has(id)&&!(q.votes||{})[id]);
+      const missing=q.eligible?.find(id=>isBot(game,id)&&!(q.votes||{})[id]);
       if(missing){action(game,missing,{type:'decision',payload:{vote:Math.random()<0.6},actionId:`tutorial-${Date.now()}-${Math.random()}`});return true;}
       return false;
     }
-    if(q.stage==='praise'&&BOT_IDS.has(q.actorId)){
+    if(q.stage==='praise'&&isBot(game,q.actorId)){
       action(game,q.actorId,{type:'decision',payload:{ackPraise:true},actionId:`tutorial-${Date.now()}-${Math.random()}`});return true;
     }
     return false;
   }
   if(q.type==='snakes'){
-    const missing=q.eligible?.find(id=>BOT_IDS.has(id)&&!(q.votes||{})[id]);
+    const missing=q.eligible?.find(id=>isBot(game,id)&&!(q.votes||{})[id]);
     if(missing){action(game,missing,{type:'decision',payload:{vote:Math.random()<0.5},actionId:`tutorial-${Date.now()}-${Math.random()}`});return true;}
     return false;
   }
   if(q.type==='champion'){
     if(q.stage==='rolling'){
-      const missing=q.rollPlayers?.find(id=>BOT_IDS.has(id)&&q.rolls?.[id]==null);
+      const missing=q.rollPlayers?.find(id=>isBot(game,id)&&q.rolls?.[id]==null);
       if(missing){action(game,missing,{type:'decision',payload:{roll:true},actionId:`tutorial-${Date.now()}-${Math.random()}`});return true;}
       return false;
     }
-    const missing=q.eligible?.find(id=>BOT_IDS.has(id)&&!(q.votes||{})[id]);
+    const missing=q.eligible?.find(id=>isBot(game,id)&&!(q.votes||{})[id]);
     if(missing){action(game,missing,{type:'decision',payload:{vote:Math.random()<0.65},actionId:`tutorial-${Date.now()}-${Math.random()}`});return true;}
     return false;
   }
   if(q.type==='madKingRoll'){
-    const missing=q.rollPlayers?.find(id=>BOT_IDS.has(id)&&q.rolls?.[id]==null);
+    const missing=q.rollPlayers?.find(id=>isBot(game,id)&&q.rolls?.[id]==null);
     if(missing){action(game,missing,{type:'decision',payload:{roll:true},actionId:`tutorial-${Date.now()}-${Math.random()}`});return true;}
     return false;
   }
   if(q.type==='blackPlague'){
     if(q.stage==='pairing'){
-      const botId=q.unpairedIds?.find(id=>BOT_IDS.has(id));
+      const botId=q.unpairedIds?.find(id=>isBot(game,id));
       if(botId){
-        const partner=q.unpairedIds.find(id=>id!==botId&&BOT_IDS.has(id))||q.unpairedIds.find(id=>id!==botId);
+        const partner=q.unpairedIds.find(id=>id!==botId&&isBot(game,id))||q.unpairedIds.find(id=>id!==botId);
         if(partner){action(game,botId,{type:'decision',payload:{partnerId:partner},actionId:`tutorial-${Date.now()}-${Math.random()}`});return true;}
       }
       return false;
     }
     if(q.stage==='rollingPairs'){
-      const missing=q.pairs?.flat().find(id=>BOT_IDS.has(id)&&q.rolls?.[id]==null);
+      const missing=q.pairs?.flat().find(id=>isBot(game,id)&&q.rolls?.[id]==null);
       if(missing){action(game,missing,{type:'decision',payload:{roll:true},actionId:`tutorial-${Date.now()}-${Math.random()}`});return true;}
       return false;
     }
-    if(q.stage==='loneRolling'&&BOT_IDS.has(q.loneId)){
+    if(q.stage==='loneRolling'&&isBot(game,q.loneId)){
       action(game,q.loneId,{type:'decision',payload:{roll:true},actionId:`tutorial-${Date.now()}-${Math.random()}`});return true;
     }
     return false;
   }
   if(q.type==='scapegoat'){
-    if(q.stage==='rolling'&&BOT_IDS.has(q.rollPlayerId)){
+    if(q.stage==='rolling'&&isBot(game,q.rollPlayerId)){
       action(game,q.rollPlayerId,{type:'decision',payload:{roll:true},actionId:`tutorial-${Date.now()}-${Math.random()}`});return true;
     }
-    if(q.currentVoterId&&BOT_IDS.has(q.currentVoterId)){
+    if(q.currentVoterId&&isBot(game,q.currentVoterId)){
       const voter=playerById(game,q.currentVoterId);
       const target=chooseTarget(game,voter,'noble');
       if(target){action(game,voter.id,{type:'decision',payload:{targetId:target.id},actionId:`tutorial-${Date.now()}-${Math.random()}`});return true;}
@@ -313,9 +316,9 @@ function respondPending(game){
       }else payload={};
       break;
     case'meatRoll':
-      pid=q.rollPlayers.find(id=>BOT_IDS.has(id)&&q.rolls[id]==null);payload={roll:true};break;
+      pid=q.rollPlayers.find(id=>isBot(game,id)&&q.rolls[id]==null);payload={roll:true};break;
     case'weRide':
-      if(q.stage==='rolling'){pid=[q.aId,q.bId].find(id=>BOT_IDS.has(id)&&q.rolls[id]==null);payload={roll:true};}
+      if(q.stage==='rolling'){pid=[q.aId,q.bId].find(id=>isBot(game,id)&&q.rolls[id]==null);payload={roll:true};}
       else if(q.stage==='lowerChoice'){pid=q.lowerId;payload={choice:Math.random()<0.55?'full':'split'};}
       else if(q.stage==='higherChoice'){pid=q.higherId;payload={accept:Math.random()<0.5};}
       break;
@@ -337,7 +340,7 @@ export async function runBotStep(game){
   }
   if(game.phase==='negotiation')return false;
   const bot=playerById(game,game.currentPlayerId);
-  if(!bot||!BOT_IDS.has(bot.id))return false;
+  if(!bot||!isBot(game,bot.id))return false;
   const card=chooseCard(game,bot);
   if(card){
     const payload=payloadForCard(game,bot,card);
@@ -362,4 +365,4 @@ export async function runBotStep(game){
   return false;
 }
 
-export {BOT_IDS,HUMAN_ID};
+export {BOT_IDS,humanId(game)};
