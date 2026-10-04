@@ -179,7 +179,7 @@ function adminAction(r,p,msg){
   } else if(msg.type==='kick'){
     if(msg.playerId===p.id)throw new Error('The admin cannot kick themselves.');const target=getRoomPlayer(r,msg.playerId);if(!target)throw new Error('Player not found.');const ws=r.sockets.get(target.id);removeLobbyPlayer(r,target.id);send(ws,{type:'kicked',message:'You were removed from the room by the admin.'});return;
   } else if(msg.type==='transferHost'){
-    const target=getRoomPlayer(r,msg.playerId);if(!target)throw new Error('Player not found.');r.host=target.id;
+    const target=getRoomPlayer(r,msg.playerId);if(!target)throw new Error('Player not found.');if(target.isBot)throw new Error('A bot cannot become the room host.');r.host=target.id;
   } else if(msg.type==='closeRoom'){
     closeRoom(r);return;
   } else if(msg.type==='addBot'){
@@ -235,7 +235,7 @@ wss.on('connection',(ws)=>{
         const text=String(msg.text||'').normalize('NFKC').replace(/[\u0000-\u001f\u007f\u200b-\u200f\u202a-\u202e\u2060-\u206f]/g,'').trim().slice(0,500);if(text){r.game.chat=r.game.chat||[];r.game.chat.push({id:crypto.randomUUID(),playerId:p.id,name:p.name,text,ts:Date.now()});r.game.chat=r.game.chat.slice(-100);}broadcast(r);return;
       }
       if(msg.type==='ready'){if(r.game.phase!=='lobby')throw new Error('The lobby is closed.');p.ready=!!msg.value;broadcast(r);return;}
-      if(msg.type==='leaveLobby'){const leavingId=p.id;const socket=ws;r.sockets.delete(leavingId);removePlayerSession(r,leavingId);r.game.players=r.game.players.filter(x=>x.id!==leavingId);r.game.seatOrder=r.game.seatOrder.filter(id=>id!==leavingId);if(r.host===leavingId)r.host=r.game.players.find(x=>!x.isBot)?.id||r.game.players[0]?.id||null;send(socket,{type:'leftRoom',message:'You left the lobby.'});broadcast(r);return;}
+      if(msg.type==='leaveLobby'){const leavingId=p.id;const socket=ws;r.sockets.delete(leavingId);removePlayerSession(r,leavingId);r.game.players=r.game.players.filter(x=>x.id!==leavingId);r.game.seatOrder=r.game.seatOrder.filter(id=>id!==leavingId);send(socket,{type:'leftRoom',message:'You left the lobby.'});if(!r.game.players.some(x=>!x.isBot)){closeRoom(r);return;}if(r.host===leavingId)r.host=r.game.players.find(x=>!x.isBot)?.id||null;broadcast(r);return;}
       if(['roomSettings','kick','transferHost','closeRoom','addBot','removeBot','start'].includes(msg.type)){adminAction(r,p,msg);broadcast(r);return;}
       if(msg.type==='endNegotiation'){
         // The physical rules allow the group to move on early by mutual agreement; online, require all connected players to agree.
