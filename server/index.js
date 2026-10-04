@@ -78,7 +78,8 @@ function createRoom(msg){
   const name=sanitizeRoomName(msg.name)||'Royal Court';
   const max=Math.max(4,Math.min(8,Number(msg.max)||8));
   const lang=['fr','en'].includes(msg.lang)?msg.lang:'fr';
-  const r={code:roomCode(),name,public:!!msg.public,max,lang,host:null,game:null,sockets:new Map(),tokens:new Map(),createdAt:Date.now()};
+  const botCount=Math.max(0,Math.min(max-1,Number(msg.bots)||0));
+  const r={code:roomCode(),name,public:!!msg.public,max,lang,botCount,host:null,game:null,sockets:new Map(),tokens:new Map(),createdAt:Date.now()};
   rooms.set(r.code,r);return r;
 }
 function addLobbyPlayer(r,name){
@@ -206,7 +207,7 @@ wss.on('connection',(ws)=>{
       if(msg.type==='create'){
         if(bound)throw new Error('This connection is already attached to a room.');
         const name=sanitizeName(msg.player);if(!name)throw new Error('Enter a player name.');
-        const r=createRoom(msg);const p=addLobbyPlayer(r,name);const token=playerSessionToken();r.tokens.set(p.id,token);sessions.set(token,{room:r.code,playerId:p.id});r.sockets.set(p.id,ws);bound={r,p,token};markRoomActivity(r);send(ws,{type:'session',session:token,room:r.code,playerId:p.id});broadcast(r);return;
+        const r=createRoom(msg);const p=addLobbyPlayer(r,name);for(let i=0;i<r.botCount;i++)addLobbyBot(r);const token=playerSessionToken();r.tokens.set(p.id,token);sessions.set(token,{room:r.code,playerId:p.id});r.sockets.set(p.id,ws);bound={r,p,token};markRoomActivity(r);send(ws,{type:'session',session:token,room:r.code,playerId:p.id});broadcast(r);return;
       }
       if(msg.type==='join'){
         if(bound)throw new Error('This connection is already attached to a room.');
@@ -234,7 +235,8 @@ wss.on('connection',(ws)=>{
         const text=String(msg.text||'').normalize('NFKC').replace(/[\u0000-\u001f\u007f\u200b-\u200f\u202a-\u202e\u2060-\u206f]/g,'').trim().slice(0,500);if(text){r.game.chat=r.game.chat||[];r.game.chat.push({id:crypto.randomUUID(),playerId:p.id,name:p.name,text,ts:Date.now()});r.game.chat=r.game.chat.slice(-100);}broadcast(r);return;
       }
       if(msg.type==='ready'){if(r.game.phase!=='lobby')throw new Error('The lobby is closed.');p.ready=!!msg.value;broadcast(r);return;}
-      if(['roomSettings','kick','transferHost','closeRoom','addBot','removeBot','leaveLobby','start'].includes(msg.type)){adminAction(r,p,msg);if(msg.type==='leaveLobby'){broadcast(r);return;}broadcast(r);return;}
+      if(msg.type==='leaveLobby'){const leavingId=p.id;const socket=ws;r.sockets.delete(leavingId);removePlayerSession(r,leavingId);r.game.players=r.game.players.filter(x=>x.id!==leavingId);r.game.seatOrder=r.game.seatOrder.filter(id=>id!==leavingId);if(r.host===leavingId)r.host=r.game.players.find(x=>!x.isBot)?.id||r.game.players[0]?.id||null;send(socket,{type:'leftRoom',message:'You left the lobby.'});broadcast(r);return;}
+      if(['roomSettings','kick','transferHost','closeRoom','addBot','removeBot','start'].includes(msg.type)){adminAction(r,p,msg);broadcast(r);return;}
       if(msg.type==='endNegotiation'){
         // The physical rules allow the group to move on early by mutual agreement; online, require all connected players to agree.
         if(r.game.phase!=='negotiation')throw new Error('Negotiation is not active.');
