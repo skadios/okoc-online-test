@@ -263,3 +263,169 @@
 @media(prefers-reduced-motion:reduce){
   .discard-stack.pulse,.discard-stack.pulse span{animation:none!important}
 }
+
+
+/* V36 — compact physical table layout + fix the hidden King/material overlap */
+.game-screen{
+  padding:12px 16px 26px;
+}
+.game-top{
+  min-height:72px;
+  padding:9px 12px;
+}
+.turn-banner{
+  margin-top:8px;
+  padding:9px 14px;
+  min-height:38px;
+}
+.polished-table{
+  min-height:clamp(330px,40vh,450px);
+  height:clamp(330px,40vh,450px);
+  margin-top:12px;
+  overflow:hidden;
+}
+.table-materials{
+  left:auto!important;
+  right:18px;
+  top:14px!important;
+  transform:none!important;
+  gap:8px!important;
+  z-index:6!important;
+}
+.round-tracker-material{
+  width:180px;
+}
+.table-materials>.character-card{
+  width:76px;
+}
+.king-center{
+  z-index:8;
+  top:24px!important;
+}
+.king-center .figure-king{
+  transform:scale(.82);
+  transform-origin:top center;
+}
+.king-center b{
+  margin-top:0;
+  background:#050505;
+  color:#fff;
+  border:2px solid #fff;
+  padding:4px 7px;
+  width:max-content;
+  max-width:180px;
+  margin-left:auto;
+  margin-right:auto;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.king-center span{
+  background:#fff;
+  color:#000;
+  border:2px solid #000;
+  padding:2px 5px;
+  width:max-content;
+  margin-left:auto;
+  margin-right:auto;
+}
+.seats{
+  bottom:12px;
+  gap:8px;
+}
+.seat{
+  min-height:102px;
+}
+.side-panels{
+  grid-template-rows:minmax(145px,1fr) minmax(145px,1fr);
+}
+.side-panels section{
+  min-height:0;
+}
+.side-panels .scroll-log{
+  height:118px;
+}
+.material-row{
+  margin-top:10px;
+}
+@media(min-width:1101px){
+  .game-main{
+    gap:10px;
+  }
+  .hand-zone{
+    min-height:0;
+  }
+  .game-screen .game-main{
+    align-items:start;
+  }
+}
+@media(max-width:1100px){
+  .polished-table{
+    height:clamp(320px,43vh,430px);
+    min-height:320px;
+  }
+  .table-materials{
+    right:12px;
+  }
+  .round-tracker-material{
+    width:160px;
+  }
+  .table-materials>.character-card{
+    width:68px;
+  }
+}
+@media(max-width:700px){
+  .game-screen{
+    padding:8px 8px 18px;
+  }
+  .game-top{
+    min-height:64px;
+  }
+  .turn-banner{
+    min-height:0;
+  }
+  .polished-table{
+    height:clamp(360px,54vh,460px);
+    min-height:360px;
+  }
+  .table-materials{
+    left:50%!important;
+    right:auto;
+    top:8px!important;
+    transform:translateX(-50%)!important;
+    max-width:calc(100% - 12px);
+    gap:5px!important;
+  }
+  .round-tracker-material{
+    width:min(150px,45vw);
+  }
+  .table-materials>.character-card{
+    width:58px;
+  }
+  .king-center{
+    top:78px!important;
+  }
+  .king-center .figure-king{
+    transform:scale(.62);
+  }
+  .king-center b{
+    font-size:.55rem;
+    max-width:125px;
+  }
+  .king-center span{
+    font-size:.45rem;
+  }
+  .seats{
+    bottom:7px;
+    gap:5px;
+  }
+  .seat{
+    min-height:88px;
+  }
+  .side-panels .scroll-log{
+    height:112px;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  .game-top,.turn-banner,.polished-table,.seat,.king-center .figure-king{animation:none!important}
+}
