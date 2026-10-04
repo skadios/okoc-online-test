@@ -128,3 +128,116 @@
 @keyframes okocLogIn{from{opacity:0;transform:translateX(8px)}to{opacity:1;transform:none}}
 @keyframes okocReveal{from{opacity:0;transform:scale(1.05)}to{opacity:1;transform:none}}
 @keyframes okocCrownReveal{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-8px) rotate(1deg)}}
+
+
+/* V34 — physical-table clarity + chat fallback + seat identity hardening */
+.game-screen{background:#f00008}
+.table-stage:after{display:none}
+.modal-backdrop{backdrop-filter:none}
+.seat{
+  grid-template-columns:minmax(0,1fr);
+  align-items:start;
+  gap:7px;
+  padding:8px;
+}
+.seat-head{
+  grid-column:1;
+  display:grid;
+  grid-template-columns:52px minmax(0,1fr);
+  gap:8px;
+  align-items:center;
+  min-width:0;
+}
+.seat-identity{min-width:0;overflow:hidden}
+.seat-identity b{
+  max-width:100%;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.seat-identity span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.seat-meta{
+  grid-column:1;
+  min-width:0;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:7px;
+}
+.seat-meta>div:last-child{min-width:0}
+.seat-meta strong{font-size:.62rem}
+.seat-meta small{font-size:.45rem;color:#777}
+.seat.king-seat .seat-meta small{color:#aaa}
+.seat.active .active-dot{z-index:4}
+.seat.active:before{
+  content:"";
+  position:absolute;
+  left:7px;
+  top:7px;
+  width:7px;
+  height:7px;
+  background:var(--okoc-red);
+  border:2px solid #fff;
+  box-shadow:0 0 0 2px #000;
+  animation:okocTurnToken .8s ease-in-out infinite alternate;
+}
+.hand-grid .physical-card{animation-delay:calc(.02s + var(--card-index,0) * .035s)}
+.hand-grid .physical-card:active{transform:translateY(-5px) scale(.98) rotate(1deg)}
+.material-row>div:first-child img{animation:okocDeckShuffle 2.4s ease-in-out infinite}
+.chat-log p:last-child,.chat-dock-log p:last-child{animation:okocChatPop .28s var(--okoc-ease) both}
+.chat-box{position:relative}
+.chat-box input{min-width:0}
+.chat-box button{transition:transform .14s ease,filter .14s ease,opacity .14s ease}
+.chat-box button:hover:not(:disabled){transform:translateY(-2px);filter:brightness(1.08)}
+.chat-box button:disabled{opacity:.38;cursor:not-allowed}
+.chat-dock{
+  width:min(430px,calc(100vw - 28px));
+  padding:13px;
+  box-shadow:8px 8px #000;
+  animation:okocChatDockIn .28s var(--okoc-ease) both;
+}
+.chat-dock::before{
+  content:"DISCUSSION DE SECOURS · SUPERPOSITION ACTIVE";
+  display:block;
+  margin:-13px -13px 9px;
+  padding:6px 10px;
+  background:var(--okoc-red);
+  color:#fff;
+  border-bottom:2px solid #fff;
+  font:900 .43rem Arial,sans-serif;
+  letter-spacing:.12em;
+}
+.chat-dock-log{max-height:190px}
+.chat-dock input{font-size:.62rem;padding:10px}
+.chat-dock button{font-size:.58rem}
+@keyframes okocTurnToken{from{transform:scale(.85)}to{transform:scale(1.2)}}
+@keyframes okocDeckShuffle{0%,68%,100%{transform:translateY(0) rotate(0)}72%{transform:translateX(-2px) rotate(-3deg)}76%{transform:translateX(2px) rotate(3deg)}80%{transform:translateY(-2px) rotate(0)}}
+@keyframes okocChatPop{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes okocChatDockIn{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:none}}
+@media(max-width:900px){
+  .seat{grid-template-columns:1fr;min-height:0}
+  .seat-head{grid-template-columns:44px minmax(0,1fr)}
+  .seat .figure-noble{transform:none}
+  .seat-meta{
+    display:flex;
+    padding-top:2px;
+    border-top:1px solid rgba(0,0,0,.16);
+  }
+  .seat.king-seat .seat-meta{border-top-color:#333}
+  .chat-dock{right:10px;bottom:10px;width:min(430px,calc(100vw - 20px))}
+}
+@media(max-width:600px){
+  .seat{padding:7px;gap:5px}
+  .seat-head{grid-template-columns:38px minmax(0,1fr);gap:7px}
+  .seat-head .figure-noble{width:36px;height:58px}
+  .seat-head .figure-king{width:50px;height:66px}
+  .seat-head .figure-king:before{top:-18px;height:19px}
+  .seat-meta .character-card--compact{display:none}
+  .seat-meta strong{font-size:.57rem}
+  .seat-meta small{font-size:.4rem}
+  .chat-dock{right:7px;bottom:7px;width:calc(100vw - 14px);padding:10px}
+  .chat-dock::before{margin:-10px -10px 8px}
+}
+@media(prefers-reduced-motion:reduce){
+  .material-row>div:first-child img,.seat.active:before,.chat-dock,.chat-log p:last-child,.chat-dock-log p:last-child{animation:none!important}
+}
