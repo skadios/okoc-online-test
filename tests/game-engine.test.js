@@ -144,6 +144,24 @@ test('ending a turn refills the hand back to 8 instead of drawing one card per p
   assert.equal(p.playedThisTurn,0);
 });
 
+test('end-of-turn refill never overdraws after a card effect already restored the hand',()=>{
+  const luckyRng=()=>0.99;
+  const g=ready(createGame(players(4),luckyRng));
+  const actor=g.players.find(x=>x.role==='king');
+  const target=g.players.find(x=>x.role==='noble');
+  actor.hand=[inst('sub-rosa','king'),...actor.hand.slice(0,7)];
+  target.hand=Array.from({length:8},()=>inst('wrath','noble'));
+  g.currentPlayerId=actor.id;
+  actor.playedThisTurn=1;
+  playCard(g,actor.id,actor.hand[0].instanceId,{targetId:target.id});
+  assert.equal(g.pending?.type,'subRosa');
+  action(g,actor.id,{type:'decision',payload:{mode:'hand'},actionId:'subrosa-mode-refill'});
+  action(g,actor.id,{type:'decision',payload:{roll:true},actionId:'subrosa-roll-refill'});
+  assert.ok(g.pending?.roll>=4);
+  action(g,actor.id,{type:'decision',payload:{cardInstanceId:target.hand[0].instanceId},actionId:'subrosa-take-refill'});
+  assert.equal(actor.hand.length,8);
+  assert.equal(actor.playedThisTurn,0);
+});
 test('role and hand side remain paired after a crown change',()=>{
   const g=ready(createGame(players(4),rng));
   const oldKing=g.players.find(p=>p.role==='king');
