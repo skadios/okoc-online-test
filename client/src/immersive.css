@@ -241,3 +241,25 @@
 @media(prefers-reduced-motion:reduce){
   .material-row>div:first-child img,.seat.active:before,.chat-dock,.chat-log p:last-child,.chat-dock-log p:last-child{animation:none!important}
 }
+
+
+/* V35 — chat localization/accessibility + physical discard feedback */
+.chat-dock-head>div{display:grid;gap:3px;min-width:0}
+.chat-dock-head .chat-dock-mode{display:block;color:#aaa;font:700 .38rem/1.2 Arial,sans-serif;letter-spacing:.06em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat-dock-log,.chat-log{overscroll-behavior:contain}
+.discard-stack.pulse{animation:okocDiscardPulse .62s var(--okoc-ease) both}
+.discard-stack.pulse span{display:inline-block;animation:okocDiscardNumber .62s ease both}
+@keyframes okocDiscardPulse{
+  0%{transform:translateY(0) rotate(0);box-shadow:none}
+  35%{transform:translateY(-7px) rotate(-2deg);box-shadow:6px 7px 0 var(--okoc-red)}
+  65%{transform:translateY(2px) rotate(1deg);box-shadow:3px 3px 0 #000}
+  100%{transform:none;box-shadow:none}
+}
+@keyframes okocDiscardNumber{
+  0%{transform:scale(.7);opacity:.35}
+  55%{transform:scale(1.22)}
+  100%{transform:scale(1)}
+}
+@media(prefers-reduced-motion:reduce){
+  .discard-stack.pulse,.discard-stack.pulse span{animation:none!important}
+}
