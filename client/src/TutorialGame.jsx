@@ -12,16 +12,16 @@ async function request(path,options={}){
   return data;
 }
 
-function Coach({guide,visible,setVisible,onRestart}){
+function Coach({guide,visible,setVisible,onRestart,t}){
   if(!visible||!guide)return null;
   return <aside className={`tutorial-coach tutorial-coach--${guide.tone||'rule'}`} aria-live="polite">
-    <div className="tutorial-coach-top"><span>OKOC · TUTORIEL</span><button onClick={()=>setVisible(false)} aria-label="Masquer le tutoriel">×</button></div>
+    <div className="tutorial-coach-top"><span>OKOC · {t.tutorial}</span><button onClick={()=>setVisible(false)} aria-label={t.lang==='fr'?'Masquer le tutoriel':'Hide tutorial'}>×</button></div>
     <div className="tutorial-coach-progress"><i style={{width:`${guide.progress||0}%`}}/></div>
     <strong>{guide.title}</strong>
     <p>{guide.body}</p>
     <div className="tutorial-coach-actions">
-      <button onClick={()=>setVisible(false)}>J'AI COMPRIS</button>
-      {guide.phase==='gameover'&&<button onClick={onRestart}>REJOUER</button>}
+      <button onClick={()=>setVisible(false)}>{t.tutorialDone}</button>
+      {guide.phase==='gameover'&&<button onClick={onRestart}>{t.restart}</button>}
     </div>
   </aside>;
 }
@@ -84,8 +84,8 @@ export default function TutorialGame({lang='fr',goHome}){
 
   return <main className="tutorial-host">
     {state&&<Game t={t} lang={lang} state={state} me={me} goHome={goHome} selected={selected} setSelected={setSelected} send={send} chat={chat} setChat={setChat} peek={peek} setPeek={setPeek} privateKnight={privateKnight} setPrivateKnight={setPrivateKnight} tradeOffer={tradeOffer} setTradeOffer={setTradeOffer}/>}
-    <Coach guide={state?.tutorial} visible={coachVisible} setVisible={setCoachVisible} onRestart={start}/>
-    {!coachVisible&&state?.tutorial&&<button className="tutorial-coach-reopen" onClick={()=>setCoachVisible(true)}>TUTORIEL · AFFICHER</button>}
+    <Coach guide={state?.tutorial} visible={coachVisible} setVisible={setCoachVisible} onRestart={start} t={{...t,lang}}/>
+    {!coachVisible&&state?.tutorial&&<button className="tutorial-coach-reopen" onClick={()=>setCoachVisible(true)}>{lang==='fr'?'TUTORIEL · AFFICHER':'TUTORIAL · SHOW'}</button>}
     {error&&<button className="tutorial-error" onClick={()=>setError('')}>{error} ×</button>}
   </main>;
 }
