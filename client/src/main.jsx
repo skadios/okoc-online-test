@@ -171,7 +171,7 @@ export function Game({t,lang,state,me,goHome,selected,setSelected,send,chat,setC
     <button className={soundEnabled?'selected':''} onClick={()=>setSoundEnabled(v=>!v)}>♪ {soundEnabled?t.sound:t.mute}</button>
    </div>
    {state.phase==='negotiation'&&<NegotiationBar t={t} lang={lang} state={state} timeLeft={timeLeft} me={me} send={send} tradeTarget={tradeTarget} setTradeTarget={setTradeTarget} tradeGive={tradeGive} setTradeGive={setTradeGive} amount={amount} setAmount={setAmount}/>} 
-   <section className={`table-stage polished-table ${mobileView==='hand'?'mobile-collapsed':''}`}>
+   <section className={`table-stage polished-table ${mobileView==='hand'?'mobile-collapsed':''} ${state.round===4?'final-round':''}`}>
     <div className="table-center-hud"><span className="eyebrow">{t.tableCenter}</span><strong>{state.players.find(p=>p.id===state.currentPlayerId)?.name||'—'}</strong><small>{phaseLabel(t,state.phase)}</small><div><span>{t.decks}: {state.deckCounts?.king??0} / {state.deckCounts?.noble??0}</span><span>{t.discardCount}: {state.discard?.length??0}</span></div></div>
     <div className="table-materials"><RoundTracker t={t} round={state.round} direction={state.direction}/><GoldCharacterCard t={t} gold={me?.gold??0} role={me?.role||'noble'}/>{state.phase==='negotiation'&&<div className="material-hourglass"><img src="/assets/material/hourglass.png" alt=""/><span>{timeLeft}s</span></div>}</div>
     <div className="table-ornament top-left"></div><div className="table-ornament bottom-right"></div>
