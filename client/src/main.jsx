@@ -1,4 +1,4 @@
-import React,{useEffect,useMemo,useRef,useState} from 'react';
+import React,{useCallback,useEffect,useMemo,useRef,useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import {CARDS} from '../../shared/cards.js';
 import './style.css';
@@ -367,4 +367,23 @@ else if(q.type==='weRide'){const lower=state.players.find(p=>p.id===q.lowerId),h
 
 function TradeModal({t,lang,state,offer,send,close}){return <div className="modal-backdrop"><div className="game-modal premium-modal"><span className="eyebrow">{lang==='fr'?'NÉGOCIATION · OFFRE DE CARTE':'NEGOTIATION · CARD OFFER'}</span><h2>{offer.fromName}</h2><p>{lang==='fr'?'On vous propose ': 'They offer '}<b>{offer.card?.[lang]}</b>. {lang==='fr'?'Choisissez la carte que vous acceptez d’échanger.':'Select the card you are willing to exchange.'}</p><div className="peek-grid">{state.hand.map(c=><button key={c.instanceId} onClick={()=>{send({type:'respondTrade',offerId:offer.id,receiveCardId:c.instanceId,accept:true});close()}}>{c[lang]}</button>)}</div><button onClick={()=>{send({type:'respondTrade',offerId:offer.id,accept:false});close()}}>{t.refuse}</button></div></div>}
 
-createRoot(document.getElementById('root')).render(<App/>);
+class FrontendErrorBoundary extends React.Component{
+  constructor(props){super(props);this.state={error:null};}
+  static getDerivedStateFromError(error){return {error};}
+  componentDidCatch(error,info){console.error('[OKOC FRONTEND]',error,info?.componentStack||'');}
+  render(){
+    if(!this.state.error)return this.props.children;
+    const error=this.state.error;
+    return <main style={{minHeight:'100vh',background:'#050505',color:'#fff',padding:'32px',fontFamily:'Arial,sans-serif'}}>
+      <section style={{maxWidth:'900px',margin:'0 auto',border:'4px solid #fff',padding:'24px',boxShadow:'10px 10px #f00008'}}>
+        <div style={{fontWeight:900,letterSpacing:'.12em',fontSize:'12px',color:'#f00008'}}>ERREUR FRONTEND / FRONTEND ERROR</div>
+        <h1 style={{fontSize:'32px',margin:'12px 0'}}>Le jeu a rencontré une erreur</h1>
+        <p style={{fontFamily:'monospace',whiteSpace:'pre-wrap',overflowWrap:'anywhere'}}>{String(error?.stack||error?.message||error)}</p>
+        <button style={{marginTop:'16px',padding:'12px 16px',border:'3px solid #fff',background:'#f00008',color:'#fff',fontWeight:900,cursor:'pointer'}} onClick={()=>location.reload()}>RECHARGER / RELOAD</button>
+      </section>
+    </main>;
+  }
+}
+window.addEventListener('error',event=>console.error('[OKOC WINDOW ERROR]',event.error||event.message));
+window.addEventListener('unhandledrejection',event=>console.error('[OKOC UNHANDLED REJECTION]',event.reason));
+createRoot(document.getElementById('root')).render(<FrontendErrorBoundary><App/></FrontendErrorBoundary>);
