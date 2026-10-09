@@ -39,3 +39,27 @@ test('frontend imports every React hook it calls',()=>{
     assert.match(importLine,new RegExp('\\b'+hook+'\\b'),`Missing React hook import: ${hook}`);
   }
 });
+
+
+test('bots do not repeat a Council vote when their previous vote was false',async()=>{
+  const players=[
+    {id:'human-1',name:'Player'},
+    {id:'bot-1',name:'Armand'},
+    {id:'human-2',name:'Player 2'},
+    {id:'bot-2',name:'Béatrice'}
+  ];
+  const game=createGame(players,()=>0.2);
+  game._botIds=new Set(['bot-1','bot-2']);
+  game._humanId='human-1';
+  game.phase='playing';
+  game.currentPlayerId='human-1';
+  game.pending={
+    type:'council',stage:'voting',actorId:'human-1',eligible:['bot-1','bot-2'],
+    votes:{'bot-1':false},card:{id:'council',en:'Council Meeting',fr:'Réunion du conseil'}
+  };
+  const {action}=await import('../server/game-engine.js');
+  // A false vote is still a submitted vote; the bot must move on to the next voter.
+  assert.equal(await runBotStep(game),true);
+  assert.equal(Object.hasOwn(game.pending.votes,'bot-1'),true);
+  assert.equal(Object.hasOwn(game.pending.votes,'bot-2'),true);
+});
