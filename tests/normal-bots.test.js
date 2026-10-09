@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 
-import {createGame,publicState,tick,startRound} from '../server/game-engine.js';
+import {createGame,publicState,tick,startRound,swapKing} from '../server/game-engine.js';
 import {runBotStep} from '../server/tutorial-ai.js';
 
 test('normal 4-player room with 1 human and 3 bots reaches playable game state',()=>{
@@ -62,4 +62,40 @@ test('bots do not repeat a Council vote when their previous vote was false',asyn
   assert.equal(await runBotStep(game),true);
   assert.equal(Object.hasOwn(game.pending.votes,'bot-1'),true);
   assert.equal(Object.hasOwn(game.pending.votes,'bot-2'),true);
+});
+
+
+test('crown exchange swaps physical seats and role-specific hands but preserves each player gold',()=>{
+  const game=createGame([
+    {id:'human-1',name:'Former King'},
+    {id:'human-2',name:'Noble A'},
+    {id:'bot-1',name:'Bot B'},
+    {id:'bot-2',name:'Bot C'}
+  ],()=>0.2);
+  const oldKing=game.players.find(p=>p.role==='king');
+  const newKing=game.players.find(p=>p.role==='noble');
+  const oldKingGold=oldKing.gold=1370;
+  const newKingGold=newKing.gold=420;
+  const kingSeat=game.seatOrder.indexOf(oldKing.id);
+  const nobleSeat=game.seatOrder.indexOf(newKing.id);
+  const kingCard={id:'king-test',instanceId:'king-test-1',side:'king'};
+  const nobleCard={id:'noble-test',instanceId:'noble-test-1',side:'noble'};
+  oldKing.hand=[kingCard];
+  newKing.hand=[nobleCard];
+
+  swapKing(game,newKing.id);
+
+  assert.equal(game.kingId,newKing.id);
+  assert.equal(newKing.role,'king');
+  assert.equal(oldKing.role,'noble');
+  assert.equal(oldKing.gold,oldKingGold);
+  assert.equal(newKing.gold,newKingGold);
+  assert.equal(oldKing.hand[0],nobleCard);
+  assert.equal(newKing.hand[0],kingCard);
+  assert.equal(game.seatOrder.indexOf(newKing.id),kingSeat);
+  assert.equal(game.seatOrder.indexOf(oldKing.id),nobleSeat);
+  const state=publicState(game,newKing.id);
+  assert.deepEqual(state.players.map(p=>p.id),game.seatOrder);
+  assert.equal(state.players.find(p=>p.id===oldKing.id).gold,oldKingGold);
+  assert.equal(state.players.find(p=>p.id===newKing.id).gold,newKingGold);
 });
