@@ -343,7 +343,7 @@ export function checkGoldCrown(game){
   // A normal gold-threshold crown is a physical seat/card-character swap: the
   // new King takes the old King's seat/cards, and the two character-card gold
   // trackers travel with those physical player positions.
-  swapKing(game,winner.id,{reason:'gold',swapGold:true});
+  swapKing(game,winner.id,{reason:'gold',swapGold:false});
   return true;
 }
 
@@ -866,17 +866,10 @@ export function decide(game,playerId,payload={}){
     if(q.mode==='hand'){
       if(!payload.cardInstanceId)throw new Error('Choose a card to discard from the revealed hand.');
       const chosen=target.hand.find(c=>c.instanceId===payload.cardInstanceId);if(!chosen)throw new Error('That card is no longer available.');
-      if(actor.role!=='king' && chosen.side!==actor.role)throw new Error('You cannot take a card from the other role’s deck.');
-      if(chosen.id==='royal-bomb')throw new Error('Royal Bomb can only be discarded or given away by its owner during negotiation.');
       target.hand=target.hand.filter(c=>c.instanceId!==chosen.instanceId);
+      game.discard.push(chosen);
       drawToMinimum(game,target);
-      if(actor.role==='king'){
-        game.discard.push(chosen);
-        log(game,`${actor.name} discarded a card from ${target.name}’s hand.`,`${actor.name} défausse une carte de la main de ${target.name}.`);
-      }else{
-        actor.hand.push(chosen);
-        log(game,`${actor.name} took a card from ${target.name}’s hand.`,`${actor.name} prend une carte de la main de ${target.name}.`);
-      }
+      log(game,`${actor.name} discarded ${chosen.en} from ${target.name}’s hand.`,`${actor.name} défausse ${chosen.fr} de la main de ${target.name}.`);
     } else if(q.mode==='knight'){
       if(actor.role==='king')throw new Error('The King’s Sub Rosa cannot inspect a Knight.');
       if(target.hand.length){
@@ -986,8 +979,11 @@ function swapKing(game,newKingId,meta={}){
   // In this online adaptation, the normal automatic gold-crown change also
   // swaps the two numeric gold amounts, as required by the project specification.
   const a=seatIndex(game,oldKing.id),b=seatIndex(game,newKing.id);[game.seatOrder[a],game.seatOrder[b]]=[game.seatOrder[b],game.seatOrder[a]];
+  // The two physical players exchange seats and role-specific hands/decks, but
+  // each player's gold remains with that player; gold is never swapped.
+  const oldIndex=game.players.indexOf(oldKing),newIndex=game.players.indexOf(newKing);
+  [game.players[oldIndex],game.players[newIndex]]=[game.players[newIndex],game.players[oldIndex]];
   [oldKing.hand,newKing.hand]=[newKing.hand,oldKing.hand];
-  if(meta.swapGold!==false)[oldKing.gold,newKing.gold]=[newKing.gold,oldKing.gold];
   oldKing.role='noble';newKing.role='king';game.kingId=newKing.id;game.kingChangedThisAction=true;
   // Existing face-down Knights and active commitments stay with their owners.
   // A crown change alone does not cancel Hindsight/Scout; those cards resolve at
