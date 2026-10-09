@@ -241,7 +241,7 @@ function respondPending(game){
     return false;
   }
   if(q.type==='snakes'){
-    const missing=q.eligible?.find(id=>isBot(game,id)&&!(q.votes||{})[id]);
+    const missing=q.eligible?.find(id=>isBot(game,id)&&!Object.hasOwn(q.votes||{},id));
     if(missing){action(game,missing,{type:'decision',payload:{vote:Math.random()<0.5},actionId:`tutorial-${Date.now()}-${Math.random()}`});return true;}
     return false;
   }
@@ -251,7 +251,7 @@ function respondPending(game){
       if(missing){action(game,missing,{type:'decision',payload:{roll:true},actionId:`tutorial-${Date.now()}-${Math.random()}`});return true;}
       return false;
     }
-    const missing=q.eligible?.find(id=>isBot(game,id)&&!(q.votes||{})[id]);
+    const missing=q.eligible?.find(id=>isBot(game,id)&&!Object.hasOwn(q.votes||{},id));
     if(missing){action(game,missing,{type:'decision',payload:{vote:Math.random()<0.65},actionId:`tutorial-${Date.now()}-${Math.random()}`});return true;}
     return false;
   }
