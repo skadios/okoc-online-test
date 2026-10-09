@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {CARDS,CARD_MAP,KING_CARDS,NOBLE_CARDS} from '../shared/cards.js';
-import {createGame,playCard,negotiateGold,publicState,adjustGold,action,tick,startRound} from '../server/game-engine.js';
+import {createGame,playCard,negotiateGold,publicState,adjustGold,action,tick,startRound,checkGoldCrown} from '../server/game-engine.js';
 
 const rng = () => 0.01;
 function players(n=4){return Array.from({length:n},(_,i)=>({id:`p${i+1}`,name:`P${i+1}`,connected:true}));}
@@ -189,4 +189,42 @@ test('role and hand side remain paired after a crown change',()=>{
     assert.equal(h.players.find(p=>p.id===ok.id).role,'noble');
     assert.equal(h.players.find(p=>p.id===ok.id).hand.every(c=>c.side==='noble'),true);
   }
+});
+
+
+test('Noble Sub Rosa discards a selected card instead of taking it',()=>{
+  const g=ready(createGame(players(4),rng));
+  const actor=g.players.find(p=>p.role==='noble');
+  const target=g.players.find(p=>p.role==='king');
+  const selected=inst('black-plague','king');
+  actor.hand=Array.from({length:7},(_,i)=>inst('wrath','noble'));
+  target.hand=[selected,...Array.from({length:7},(_,i)=>inst('black-plague','king'))];
+  g.pending={type:'subRosa',actorId:actor.id,targetId:target.id,card:inst('sub-rosa','noble'),cardBefore:null,mode:'hand',roll:4,awaitRoll:false};
+  const actorHandBefore=actor.hand.map(c=>c.instanceId);
+  action(g,actor.id,{type:'decision',payload:{cardInstanceId:selected.instanceId},actionId:'subrosa-discard-selected'});
+  assert.equal(actor.hand.some(c=>c.instanceId===selected.instanceId),false);
+  assert.deepEqual(actor.hand.map(c=>c.instanceId),actorHandBefore);
+  assert.ok(g.discard.some(c=>c.instanceId===selected.instanceId));
+  assert.equal(target.hand.length,8);
+});
+
+test('crown change swaps seat and role-specific hands but leaves gold with each player',()=>{
+  const g=ready(createGame(players(4),rng));
+  const oldKing=g.players.find(p=>p.role==='king');
+  const newKing=g.players.find(p=>p.role==='noble');
+  const oldGold=oldKing.gold,newGold=newKing.gold;
+  const oldIndex=g.seatOrder.indexOf(oldKing.id),newIndex=g.seatOrder.indexOf(newKing.id);
+  const oldKingHand=oldKing.hand.map(c=>c.instanceId);
+  const newKingHand=newKing.hand.map(c=>c.instanceId);
+  oldKing.gold=1000;newKing.gold=1001;
+  const kingGold=oldKing.gold,nobleGold=newKing.gold;
+  assert.equal(checkGoldCrown(g),true);
+  assert.equal(g.kingId,newKing.id);
+  assert.equal(oldKing.gold,kingGold);
+  assert.equal(newKing.gold,nobleGold);
+  assert.equal(g.seatOrder.indexOf(oldKing.id),newIndex);
+  assert.equal(g.seatOrder.indexOf(newKing.id),oldIndex);
+  assert.equal(g.players.indexOf(oldKing)>g.players.indexOf(newKing),false);
+  assert.deepEqual(oldKing.hand.map(c=>c.instanceId),newKingHand);
+  assert.deepEqual(newKing.hand.map(c=>c.instanceId),oldKingHand);
 });
