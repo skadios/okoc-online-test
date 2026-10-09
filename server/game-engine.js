@@ -343,7 +343,7 @@ export function checkGoldCrown(game){
   // A normal gold-threshold crown is a physical seat/card-character swap: the
   // new King takes the old King's seat/cards, and the two character-card gold
   // trackers travel with those physical player positions.
-  swapKing(game,winner.id,{reason:'gold',swapGold:false});
+  swapKing(game,winner.id);
   return true;
 }
 
@@ -976,8 +976,7 @@ function swapKing(game,newKingId,meta={}){
   if(bombIndex>=0){game.discard.push(newKing.hand.splice(bombIndex,1)[0]);drawToMinimum(game,newKing);}
   // Official guide: the new King physically swaps seats with the former King
   // and they swap cards. The shared King/Noble draw piles stay where they are.
-  // In this online adaptation, the normal automatic gold-crown change also
-  // swaps the two numeric gold amounts, as required by the project specification.
+  // Gold belongs to each physical player and therefore never moves during the swap.
   const a=seatIndex(game,oldKing.id),b=seatIndex(game,newKing.id);[game.seatOrder[a],game.seatOrder[b]]=[game.seatOrder[b],game.seatOrder[a]];
   // The two physical players exchange seats and role-specific hands/decks, but
   // each player's gold remains with that player; gold is never swapped.
