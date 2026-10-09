@@ -140,7 +140,7 @@ test('Betray the King changes the King only through its resolved server-side car
   assert.equal(k.role,'noble');
 });
 
-test('gold crown rule is automatic: a Noble with more gold than the King becomes King and swaps seat, cards, and gold amounts',()=>{
+test('gold crown rule is automatic: a Noble with more gold than the King becomes King and swaps seat and role-specific hands while keeping personal gold',()=>{
   const g=fresh();
   const oldKing=g.players.find(p=>p.role==='king');
   const noble=g.players.find(p=>p.role==='noble');
@@ -156,8 +156,8 @@ test('gold crown rule is automatic: a Noble with more gold than the King becomes
   assert.equal(oldKing.role,'noble');
   assert.equal(g.seatOrder[oldSeat],noble.id);
   assert.equal(g.seatOrder[nobleSeat],oldKing.id);
-  assert.equal(noble.gold,1000);
-  assert.equal(oldKing.gold,1001);
+  assert.equal(noble.gold,1001);
+  assert.equal(oldKing.gold,1000);
   assert.equal(noble.hand[0].instanceId,'king-hand-marker');
   assert.equal(oldKing.hand[0].instanceId,'noble-hand-marker');
 });
