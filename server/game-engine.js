@@ -967,7 +967,7 @@ export function decide(game,playerId,payload={}){
   throw new Error('Unsupported decision.');
 }
 
-function swapKing(game,newKingId,meta={}){
+export function swapKing(game,newKingId,meta={}){
   const oldKing=king(game),newKing=playerById(game,newKingId);if(!oldKing||!newKing||oldKing.id===newKing.id)return;
   // If the Noble becoming King holds the Royal Bomb, it is discarded before
   // the physical hand swap, then a replacement Noble card is drawn immediately.
