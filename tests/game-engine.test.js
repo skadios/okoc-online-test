@@ -192,7 +192,7 @@ test('role and hand side remain paired after a crown change',()=>{
 });
 
 
-test('Noble Sub Rosa discards a selected card instead of taking it',()=>{
+test('Noble Sub Rosa takes the selected card into the actor hand',()=>{
   const g=ready(createGame(players(4),rng));
   const actor=g.players.find(p=>p.role==='noble');
   const target=g.players.find(p=>p.role==='king');
@@ -200,11 +200,11 @@ test('Noble Sub Rosa discards a selected card instead of taking it',()=>{
   actor.hand=Array.from({length:7},(_,i)=>inst('wrath','noble'));
   target.hand=[selected,...Array.from({length:7},(_,i)=>inst('black-plague','king'))];
   g.pending={type:'subRosa',actorId:actor.id,targetId:target.id,card:inst('sub-rosa','noble'),cardBefore:null,mode:'hand',roll:4,awaitRoll:false};
-  const actorHandBefore=actor.hand.map(c=>c.instanceId);
-  action(g,actor.id,{type:'decision',payload:{cardInstanceId:selected.instanceId},actionId:'subrosa-discard-selected'});
-  assert.equal(actor.hand.some(c=>c.instanceId===selected.instanceId),false);
-  assert.deepEqual(actor.hand.map(c=>c.instanceId),actorHandBefore);
-  assert.ok(g.discard.some(c=>c.instanceId===selected.instanceId));
+  action(g,actor.id,{type:'decision',payload:{cardInstanceId:selected.instanceId},actionId:'subrosa-take-selected'});
+  assert.equal(actor.hand.some(c=>c.instanceId===selected.instanceId),true);
+  assert.equal(actor.hand.length,8);
+  assert.equal(target.hand.some(c=>c.instanceId===selected.instanceId),false);
+  assert.ok(!g.discard.some(c=>c.instanceId===selected.instanceId));
   assert.equal(target.hand.length,8);
 });
 
