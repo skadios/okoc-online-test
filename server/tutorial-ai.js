@@ -231,7 +231,7 @@ function respondPending(game){
   }
   if(q.type==='council'){
     if(q.stage==='voting'){
-      const missing=q.eligible?.find(id=>isBot(game,id)&&!(q.votes||{})[id]);
+      const missing=q.eligible?.find(id=>isBot(game,id)&&!Object.hasOwn(q.votes||{},id));
       if(missing){action(game,missing,{type:'decision',payload:{vote:Math.random()<0.6},actionId:`tutorial-${Date.now()}-${Math.random()}`});return true;}
       return false;
     }
