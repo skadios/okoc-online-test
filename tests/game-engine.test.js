@@ -212,7 +212,8 @@ test('crown change swaps seat and role-specific hands but leaves gold with each 
   const g=ready(createGame(players(4),rng));
   const oldKing=g.players.find(p=>p.role==='king');
   const newKing=g.players.find(p=>p.role==='noble');
-  const oldGold=oldKing.gold,newGold=newKing.gold;
+  oldKing.hand=Array.from({length:8},()=>inst('black-plague','king'));
+  newKing.hand=Array.from({length:8},()=>inst('wrath','noble'));
   const oldIndex=g.seatOrder.indexOf(oldKing.id),newIndex=g.seatOrder.indexOf(newKing.id);
   const oldArrayIndex=g.players.indexOf(oldKing),newArrayIndex=g.players.indexOf(newKing);
   const oldKingHand=oldKing.hand.map(c=>c.instanceId);
