@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {CARD_MAP} from '../shared/cards.js';
+import {CARD_MAP,NOBLE_CARDS} from '../shared/cards.js';
 import {
   createGame,
   startRound,
@@ -141,7 +141,10 @@ test('Helping Hand first-card limits follow the printed special cases',()=>{
 
 test('Sub Rosa replaces a stolen/discarded hand card and the actor refills to 8 at turn end',()=>{
   const g=fresh();
-  const actor=put(g,'sub-rosa');
+  const actor=g.players.find(p=>p.role==='noble');
+  const subRosa=NOBLE_CARDS.find(card=>card.id==='sub-rosa');
+  actor.hand=[{...subRosa,instanceId:'noble-sub-rosa-audit'}];
+  g.currentPlayerId=actor.id;
   const target=nobleOther(g,actor);
   target.hand=[{...CARD_MAP.wrath,instanceId:'target-card'}];
   const targetBefore=target.hand.length;
