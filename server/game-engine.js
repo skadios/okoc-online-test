@@ -867,9 +867,15 @@ export function decide(game,playerId,payload={}){
       if(!payload.cardInstanceId)throw new Error('Choose a card to discard from the revealed hand.');
       const chosen=target.hand.find(c=>c.instanceId===payload.cardInstanceId);if(!chosen)throw new Error('That card is no longer available.');
       target.hand=target.hand.filter(c=>c.instanceId!==chosen.instanceId);
-      game.discard.push(chosen);
-      drawToMinimum(game,target);
-      log(game,`${actor.name} discarded ${chosen.en} from ${target.name}’s hand.`,`${actor.name} défausse ${chosen.fr} de la main de ${target.name}.`);
+      if(actor.role==='king'){
+        game.discard.push(chosen);
+        drawToMinimum(game,target);
+        log(game,`${actor.name} discarded ${chosen.en} from ${target.name}’s hand.`,`${actor.name} défausse ${chosen.fr} de la main de ${target.name}.`);
+      }else{
+        actor.hand.push(chosen);
+        drawToMinimum(game,target);
+        log(game,`${actor.name} took ${chosen.en} from ${target.name}’s hand.`,`${actor.name} prend ${chosen.fr} de la main de ${target.name}.`);
+      }
     } else if(q.mode==='knight'){
       if(actor.role==='king')throw new Error('The King’s Sub Rosa cannot inspect a Knight.');
       if(target.hand.length){
@@ -941,7 +947,7 @@ export function decide(game,playerId,payload={}){
       const target=playerById(game,q.targetId),k=king(game),a=q.rolls[target.id],b=q.rolls[k.id];
       recordRolls(game,[a,b],q.card.id,{players:[{id:target.id,name:target.name},{id:k.id,name:k.name}],rollRound:q.rollRound||1});
       if(a===b){q.rolls={};q.rollRound=(q.rollRound||1)+1;log(game,`${target.name} and ${k.name} tied at ${a}; they roll again.`,`${target.name} et ${k.name} sont à égalité à ${a} ; ils relancent le dé.`);return;}
-      const targetWins=a>b;log(game,`${target.name} and ${k.name} contested the crown (${a} vs ${b}).`,`${target.name} et ${k.name} disputent la couronne (${a} contre ${b}).`);if(targetWins)swapKing(game,target.id);finishPending(game,actor,q);
+      const targetWins=a>b;log(game,`${target.name} and ${k.name} contested the crown (${a} vs ${b}).`,`${target.name} et ${k.name} disputent la couronne (${a} contre ${b}).`);if(targetWins){[target.gold,k.gold]=[k.gold,target.gold];swapKing(game,target.id);}finishPending(game,actor,q);
     }return;
   }
   if(q.type==='champion'){
