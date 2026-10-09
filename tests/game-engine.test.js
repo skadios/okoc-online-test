@@ -214,6 +214,7 @@ test('crown change swaps seat and role-specific hands but leaves gold with each 
   const newKing=g.players.find(p=>p.role==='noble');
   const oldGold=oldKing.gold,newGold=newKing.gold;
   const oldIndex=g.seatOrder.indexOf(oldKing.id),newIndex=g.seatOrder.indexOf(newKing.id);
+  const oldArrayIndex=g.players.indexOf(oldKing),newArrayIndex=g.players.indexOf(newKing);
   const oldKingHand=oldKing.hand.map(c=>c.instanceId);
   const newKingHand=newKing.hand.map(c=>c.instanceId);
   oldKing.gold=1000;newKing.gold=1001;
@@ -224,7 +225,8 @@ test('crown change swaps seat and role-specific hands but leaves gold with each 
   assert.equal(newKing.gold,nobleGold);
   assert.equal(g.seatOrder.indexOf(oldKing.id),newIndex);
   assert.equal(g.seatOrder.indexOf(newKing.id),oldIndex);
-  assert.equal(g.players.indexOf(oldKing)>g.players.indexOf(newKing),false);
+  assert.equal(g.players.indexOf(oldKing),newArrayIndex);
+  assert.equal(g.players.indexOf(newKing),oldArrayIndex);
   assert.deepEqual(oldKing.hand.map(c=>c.instanceId),newKingHand);
   assert.deepEqual(newKing.hand.map(c=>c.instanceId),oldKingHand);
 });
