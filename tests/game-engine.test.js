@@ -237,7 +237,7 @@ test("People's Champion crown exchange swaps seats and role hands without swappi
   const g=createGame(players(4),()=>0);
   const oldKing=g.players.find(p=>p.role==='king');
   const champion=g.players.find(p=>p.role==='noble');
-  const actor=oldKing;
+  const actor=g.players.find(p=>p.role==='noble'&&p.id!==champion.id);
   oldKing.gold=1000;
   champion.gold=700;
   const oldKingGold=oldKing.gold,championGold=champion.gold;
@@ -247,9 +247,9 @@ test("People's Champion crown exchange swaps seats and role hands without swappi
   oldKing.hand=[oldKingCard];
   champion.hand=[championCard];
   g.phase='playing';
-  g.currentPlayerId=oldKing.id;
+  g.currentPlayerId=actor.id;
   g.pending={
-    type:'champion',stage:'rolling',actorId:actor.id,card:inst('people-champion','king'),
+    type:'champion',stage:'rolling',actorId:actor.id,card:inst('peoples-champion','noble'),
     targetId:champion.id,rollPlayers:[champion.id,oldKing.id],
     rolls:{[champion.id]:6},rollRound:1,votes:{}
   };
