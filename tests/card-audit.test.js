@@ -81,6 +81,36 @@ test('Black Plague Nobles choose their own pair and the lone Noble rolls twice',
   assert.equal(lone.gold,before-200);
 });
 
+test('Betray the King swaps physical seats and role-specific hands but preserves personal gold',()=>{
+  const g=fresh();
+  const actor=g.players.find(p=>p.role==='noble');
+  const oldKing=g.players.find(p=>p.role==='king');
+  const actorGold=actor.gold=640;
+  const kingGold=oldKing.gold=1280;
+  const actorSeat=g.seatOrder.indexOf(actor.id);
+  const kingSeat=g.seatOrder.indexOf(oldKing.id);
+  actor.hand=[{...CARD_MAP['betray-king'],instanceId:'betray-king-swap'},...Array.from({length:7},(_,i)=>({...CARD_MAP.wrath,instanceId:'noble-hand-'+i}))];
+  oldKing.hand=Array.from({length:8},(_,i)=>({...CARD_MAP.actors,instanceId:'king-hand-'+i}));
+  g.currentPlayerId=actor.id;
+  g.round=2;
+  g.rng=()=>0.2;
+  playCard(g,actor.id,'betray-king-swap',{});
+  const supporters=g.pending.eligible.slice(0,2);
+  for(const id of supporters)decide(g,id,{support:true});
+  assert.equal(g.pending.awaitRoll,true);
+  decide(g,oldKing.id,{roll:true});
+  assert.equal(g.kingId,actor.id);
+  assert.equal(actor.role,'king');
+  assert.equal(oldKing.role,'noble');
+  assert.equal(actor.gold,actorGold);
+  assert.equal(oldKing.gold,kingGold);
+  assert.equal(g.seatOrder.indexOf(actor.id),kingSeat);
+  assert.equal(g.seatOrder.indexOf(oldKing.id),actorSeat);
+  assert.ok(actor.hand.every(card=>card.side==='king'));
+  assert.ok(oldKing.hand.every(card=>card.side==='noble'));
+  assert.equal(g.pending,null);
+});
+
 test("People’s Champion swaps seats and role-specific hands while preserving each player's gold",()=>{
   const g=fresh();
   g.round=4;
