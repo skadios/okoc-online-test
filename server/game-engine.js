@@ -1201,6 +1201,7 @@ export function action(game,playerId,msg){
 function publicPending(game,viewerId){
   const q=game.pending;if(!q)return null;
   const base={type:q.type,actorId:q.actorId,cardId:q.card?.id,targetId:q.targetId,eligible:q.eligible?.slice(),answered:q.votes?Object.keys(q.votes):q.supports?.map(x=>x.playerId)};
+  if(q.type==='council')base.stage=q.stage||'voting';
   if(q.type==='meatRoll' || q.type==='madKingRoll'){base.stage=q.stage||'rolling';base.rollPlayers=q.rollPlayers?.slice()||[];base.rolls=q.rolls||{};}
   if(q.type==='blackPlague'){base.stage=q.stage;base.unpairedIds=q.unpairedIds?.slice()||[];base.pairs=q.pairs?.map(pair=>pair.slice())||[];base.rolls=q.rolls||{};base.loneId=q.loneId||null;base.loneRolls=q.loneRolls||[];}
   if(q.type==='suppressRebellion'){base.stage=q.stage||'rolling';base.rollPlayerId=q.rollPlayerId||null;base.roll=q.roll??null;}
