@@ -99,3 +99,11 @@ test('crown exchange swaps physical seats and role-specific hands but preserves 
   assert.equal(state.players.find(p=>p.id===oldKing.id).gold,oldKingGold);
   assert.equal(state.players.find(p=>p.id===newKing.id).gold,newKingGold);
 });
+
+
+test('Sub Rosa revealed hand cards resolve directly when tapped',()=>{
+  const source=fs.readFileSync(new URL('../client/src/main.jsx',import.meta.url),'utf8');
+  assert.match(source,/onClick=\{\(\)=>send\(\{mode:'hand',cardInstanceId:c\.instanceId\}\)\}/);
+  assert.doesNotMatch(source,/setPeekSelection\(c\.instanceId\)/);
+  assert.doesNotMatch(source,/subrosa-confirm/);
+});
