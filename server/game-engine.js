@@ -526,7 +526,7 @@ function immediate(game,p,c,payload){
       const t=validateTarget(game,targetId,{notSelf:true,actor:p.id});const amount=payload.amount===200?200:100;changeGold(game,t,amount);return;
     }
     case'sub_rosa':{
-      const t=validateTarget(game,targetId,{notSelf:true,actor:p.id});
+      const t=validateTarget(game,targetId,{noble:true,notSelf:true,actor:p.id});
       game.pending={type:'subRosa',actorId:p.id,card:c,targetId:t.id,mode:null};return;
     }
     case'subsidies': nobles(game).forEach(n=>{if(n.gold===0)changeGold(game,n,300);else if(n.gold>=100&&n.gold<=300)changeGold(game,n,200);else if(n.gold>=400&&n.gold<=500)changeGold(game,n,100);});return;
@@ -792,14 +792,20 @@ export function decide(game,playerId,payload={}){
     if(payload.roll!==true)throw new Error('Click the die to roll.');
     const k=king(game);const d=roll(game.rng);const mod=q.mods.reduce((s,m)=>s+(m.side==='support'?1:-1),0);const total=d+mod;q.awaitRoll=false;recordRoll(game,d,q.card.id,{players:[{id:k.id,name:k.name}]});log(game,`${k.name} rolled ${d}${mod?` (${mod>0?'+':''}${mod})`:''}.`,`Le Roi a obtenu ${d}${mod?` (${mod>0?'+':''}${mod})`:''}.`);
     if(total<=3){swapKing(game,actor.id);} else changeGold(game,k,200);
-    for(const m of q.mods){const kp=playerById(game,m.playerId);if((m.side==='support') !== (total<=3))changeGold(game,kp,-300);}
+    for(const m of q.mods){const kp=playerById(game,m.playerId);const sideFailed=m.side==='support'?total<=3:total>3;if(sideFailed)changeGold(game,kp,-300);}
     finishPending(game,actor,q);return;
   }
   if(q.type==='betrayKing'){
     if(!q.eligible.includes(p.id))throw new Error('You cannot support this action.');
     if(q.supports.some(x=>x.playerId===p.id))throw new Error('You already responded.');
     q.supports.push({playerId:p.id,support:!!payload.support});
-    if(q.supports.length>=2){q.awaitRoll=true; q.rollPlayerId=king(game)?.id||null; return;}
+    const supportCount=q.supports.filter(x=>x.support).length;
+    if(supportCount>=2){q.awaitRoll=true;q.rollPlayerId=king(game)?.id||null;return;}
+    const remaining=q.eligible.length-q.supports.length;
+    if(supportCount+remaining<2){
+      log(game,`${actor.name} did not get two supporters for Betray the King. The card has no effect.`,`${actor.name} n’obtient pas deux soutiens pour Trahir le Roi. La carte n’a aucun effet.`);
+      finishPending(game,actor,q);return;
+    }
     return;
   }
   if(q.type==='suppressRebellion'){
