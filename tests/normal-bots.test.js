@@ -107,3 +107,21 @@ test('Sub Rosa revealed hand cards resolve directly when tapped',()=>{
   assert.doesNotMatch(source,/setPeekSelection\(c\.instanceId\)/);
   assert.doesNotMatch(source,/subrosa-confirm/);
 });
+
+
+test('Black Plague bots never choose a human Noble as that human’s partner',async()=>{
+  const game=createGame([
+    {id:'player-1',name:'Player 1'},
+    {id:'player-2',name:'Player 2'},
+    {id:'player-3',name:'Player 3'},
+    {id:'player-4',name:'Player 4'}
+  ],()=>0.2);
+  const botNoble=game.players.find(p=>p.role==='noble');
+  game._botIds=new Set([botNoble.id]);
+  game._humanId=game.players.find(p=>p.id!==botNoble.id).id;
+  const unpaired=game.players.filter(p=>p.role==='noble').map(p=>p.id);
+  game.pending={type:'blackPlague',actorId:game.players[0].id,card:{id:'black-plague'},stage:'pairing',unpairedIds:unpaired,pairs:[],rolls:{}};
+  assert.equal(await runBotStep(game),false);
+  assert.deepEqual(game.pending.unpairedIds,unpaired);
+  assert.deepEqual(game.pending.pairs,[]);
+});
