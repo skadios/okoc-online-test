@@ -268,7 +268,9 @@ function respondPending(game){
     if(q.stage==='pairing'){
       const botId=q.unpairedIds?.find(id=>isBot(game,id));
       if(botId){
-        const partner=q.unpairedIds.find(id=>id!==botId&&isBot(game,id))||q.unpairedIds.find(id=>id!==botId);
+        // Bots choose only their own bot partners. If no bot partner remains,
+        // wait for a human to choose; never make a pairing decision on their behalf.
+        const partner=q.unpairedIds.find(id=>id!==botId&&isBot(game,id));
         if(partner){action(game,botId,{type:'decision',payload:{partnerId:partner},actionId:`tutorial-${Date.now()}-${Math.random()}`});return true;}
       }
       return false;
