@@ -313,7 +313,7 @@ function respondPending(game){
       if(!q.mode){payload={mode:'hand'};break;}
       if(q.awaitRoll){payload={roll:true};break;}
       if(q.roll!=null&&q.roll>=4&&q.mode==='hand'){
-        const target=playerById(game,q.targetId);const discard=target?.hand?.[target.hand.length-1];
+        const target=playerById(game,q.targetId);const discard=target?.hand?.slice().reverse().find(c=>c.id!=='royal-bomb');
         payload=discard?{cardInstanceId:discard.instanceId}:null;
       }else if(q.roll!=null&&q.roll>=4&&q.mode==='knight'){
         payload={cardInstanceId:null};
