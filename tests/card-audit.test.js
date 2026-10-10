@@ -81,7 +81,7 @@ test('Black Plague Nobles choose their own pair and the lone Noble rolls twice',
   assert.equal(lone.gold,before-200);
 });
 
-test('People’s Champion swaps seats and role-specific hands while preserving each player's gold',()=>{
+test("People’s Champion swaps seats and role-specific hands while preserving each player's gold",()=>{
   const g=fresh();
   g.round=4;
   const actor=put(g,'peoples-champion');
