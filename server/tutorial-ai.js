@@ -7,6 +7,7 @@ const getBotIds=game=>game?game._botIds||BOT_IDS:BOT_IDS;
 const isBot=(game,id)=>getBotIds(game).has(id);
 const humanId=game=>game?game._humanId||HUMAN_ID:HUMAN_ID;
 const SAFE_EFFECTS=new Set([
+  'actors','betrayal','betray_king','council','black_plague','mad_king','snakes','scapegoat','peoples_champion',
   'bad_blood','beggars','divine','helping_king','hindsight','icarus','indebted',
   'isolation','loyalty','shadow_deal','subsidies','unprotected','wrath',
   'eye_for_eye','bend_knee','helping_noble','anchor','loyal_dog','debt_collector',
@@ -74,6 +75,8 @@ function payloadForCard(game,bot,card){
     case'royal_parrot':
     case'sub_rosa':
     case'scout':
+    case'peoples_champion':
+    case'snakes':
     case'eye_for_eye':
     case'wrath':
     case'anchor':
@@ -85,6 +88,7 @@ function payloadForCard(game,bot,card){
       break;
     default:return {};
   }
+  if(card.effect==='snakes'){const target=chooseTarget(game,bot,'any');return target?{targetId:target.id}:{};}
   if(card.effect==='anchor'){
     const a=anyTarget();const b=rankedTargets(game,bot,'bot').find(x=>x.id!==a?.id)||rankedTargets(game,bot,'any').find(x=>x.id!==a?.id);
     return a&&b?{targetId:a.id,target2Id:b.id}:null;
