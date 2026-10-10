@@ -231,3 +231,36 @@ test('crown change swaps seat and role-specific hands but leaves gold with each 
   assert.deepEqual(oldKing.hand.map(c=>c.instanceId),newKingHand);
   assert.deepEqual(newKing.hand.map(c=>c.instanceId),oldKingHand);
 });
+
+
+test("People's Champion crown exchange swaps seats and role hands without swapping gold",()=>{
+  const g=createGame(players(4),()=>0);
+  const oldKing=g.players.find(p=>p.role==='king');
+  const champion=g.players.find(p=>p.role==='noble');
+  const actor=oldKing;
+  oldKing.gold=1000;
+  champion.gold=700;
+  const oldKingGold=oldKing.gold,championGold=champion.gold;
+  const oldKingSeat=g.seatOrder.indexOf(oldKing.id),championSeat=g.seatOrder.indexOf(champion.id);
+  const oldKingCard=inst('black-plague','king');
+  const championCard=inst('wrath','noble');
+  oldKing.hand=[oldKingCard];
+  champion.hand=[championCard];
+  g.phase='playing';
+  g.currentPlayerId=oldKing.id;
+  g.pending={
+    type:'champion',stage:'rolling',actorId:actor.id,card:inst('people-champion','king'),
+    targetId:champion.id,rollPlayers:[champion.id,oldKing.id],
+    rolls:{[champion.id]:6},rollRound:1,votes:{}
+  };
+  action(g,oldKing.id,{type:'decision',payload:{roll:true},actionId:'champion-crown-roll'});
+  assert.equal(g.kingId,champion.id);
+  assert.equal(champion.role,'king');
+  assert.equal(oldKing.role,'noble');
+  assert.equal(champion.gold,championGold);
+  assert.equal(oldKing.gold,oldKingGold);
+  assert.equal(g.seatOrder.indexOf(champion.id),oldKingSeat);
+  assert.equal(g.seatOrder.indexOf(oldKing.id),championSeat);
+  assert.equal(champion.hand[0],oldKingCard);
+  assert.equal(oldKing.hand[0],championCard);
+});
