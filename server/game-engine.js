@@ -947,7 +947,7 @@ export function decide(game,playerId,payload={}){
       const target=playerById(game,q.targetId),k=king(game),a=q.rolls[target.id],b=q.rolls[k.id];
       recordRolls(game,[a,b],q.card.id,{players:[{id:target.id,name:target.name},{id:k.id,name:k.name}],rollRound:q.rollRound||1});
       if(a===b){q.rolls={};q.rollRound=(q.rollRound||1)+1;log(game,`${target.name} and ${k.name} tied at ${a}; they roll again.`,`${target.name} et ${k.name} sont à égalité à ${a} ; ils relancent le dé.`);return;}
-      const targetWins=a>b;log(game,`${target.name} and ${k.name} contested the crown (${a} vs ${b}).`,`${target.name} et ${k.name} disputent la couronne (${a} contre ${b}).`);if(targetWins){[target.gold,k.gold]=[k.gold,target.gold];swapKing(game,target.id);}finishPending(game,actor,q);
+      const targetWins=a>b;log(game,`${target.name} and ${k.name} contested the crown (${a} vs ${b}).`,`${target.name} et ${k.name} disputent la couronne (${a} contre ${b}).`);if(targetWins){swapKing(game,target.id);}finishPending(game,actor,q);
     }return;
   }
   if(q.type==='champion'){
