@@ -871,7 +871,7 @@ export function decide(game,playerId,payload={}){
     if(q.roll<4){finishPending(game,actor,q);return;}
     if(q.mode==='hand'){
       if(!payload.cardInstanceId)throw new Error('Choose a card to discard from the revealed hand.');
-      const chosen=target.hand.find(c=>c.instanceId===payload.cardInstanceId);if(!chosen)throw new Error('That card is no longer available.');
+      const chosen=target.hand.find(c=>c.instanceId===payload.cardInstanceId);if(!chosen)throw new Error('That card is no longer available.');if(chosen.id==='royal-bomb')throw new Error('Royal Bomb cannot be stolen or discarded by Sub Rosa.');
       target.hand=target.hand.filter(c=>c.instanceId!==chosen.instanceId);
       if(actor.role==='king'){
         game.discard.push(chosen);
