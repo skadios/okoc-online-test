@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {CARD_MAP,NOBLE_CARDS} from '../shared/cards.js';
+import {CARD_MAP,KING_CARDS,NOBLE_CARDS} from '../shared/cards.js';
 import {
   createGame,
   startRound,
@@ -109,6 +109,23 @@ test('Betray the King swaps physical seats and role-specific hands but preserves
   assert.ok(actor.hand.every(card=>card.side==='king'));
   assert.ok(oldKing.hand.every(card=>card.side==='noble'));
   assert.equal(g.pending,null);
+});
+
+test('Sub Rosa auto-resolves when Royal Bomb is the only card eligible to be seen',()=>{
+  const g=fresh();
+  const king=g.players.find(p=>p.role==='king');
+  const target=nobleOther(g,king);
+  king.hand=[{...KING_CARDS.find(c=>c.id==='sub-rosa'),instanceId:'subrosa-only-bomb'}];
+  const bomb={...CARD_MAP['royal-bomb'],instanceId:'only-bomb'};
+  target.hand=[bomb];
+  g.currentPlayerId=king.id;
+  g.rng=()=>0.8;
+  playCard(g,king.id,'subrosa-only-bomb',{targetId:target.id});
+  decide(g,king.id,{mode:'hand'});
+  decide(g,king.id,{roll:true});
+  assert.equal(g.pending,null);
+  assert.ok(target.hand.some(c=>c.instanceId==='only-bomb'));
+  assert.ok(!g.discard.some(c=>c.instanceId==='only-bomb'));
 });
 
 test("People’s Champion swaps seats and role-specific hands while preserving each player's gold",()=>{
