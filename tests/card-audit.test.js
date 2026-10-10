@@ -81,7 +81,7 @@ test('Black Plague Nobles choose their own pair and the lone Noble rolls twice',
   assert.equal(lone.gold,before-200);
 });
 
-test('People’s Champion swaps gold with the King and does not add an extra 100-gold penalty',()=>{
+test('People’s Champion swaps seats and role-specific hands while preserving each player's gold',()=>{
   const g=fresh();
   g.round=4;
   const actor=put(g,'peoples-champion');
@@ -93,8 +93,8 @@ test('People’s Champion swaps gold with the King and does not add an extra 100
   decide(g,target.id,{roll:true});
   decide(g,k.id,{roll:true});
   assert.equal(g.kingId,target.id);
-  assert.equal(target.gold,1000);
-  assert.equal(k.gold,600);
+  assert.equal(target.gold,600);
+  assert.equal(k.gold,1000);
 });
 
 test('People’s Champion rerolls a tied crown roll',()=>{
