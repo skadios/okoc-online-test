@@ -726,6 +726,13 @@ export function decide(game,playerId,payload={}){
     q.roll=roll(game.rng);q.awaitRoll=false;recordRoll(game,q.roll,q.card.id,{players:[{id:p.id,name:p.name}]});
     log(game,`${actor.name} rolled ${q.roll} for Sub Rosa.`,`${actor.name} a obtenu ${q.roll} pour Catimini.`);
     if(q.roll<4){finishPending(game,actor,q);return;}
+    if(q.mode==='hand'){
+      const target=playerById(game,q.targetId);
+      if(!target?.hand.some(card=>card.id!=='royal-bomb')){
+        log(game,`${actor.name} found no eligible card to remove with Sub Rosa.`,`${actor.name} ne trouve aucune carte retirable avec Catimini.`);
+        finishPending(game,actor,q);
+      }
+    }
     return;
   }
   if(q.type==='weRide'){
