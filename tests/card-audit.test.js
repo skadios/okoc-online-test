@@ -37,6 +37,7 @@ test('Council Meeting waits for the bow/praise before resolving and drawing 2',(
   playCard(g,actor.id,actor.hand[0].instanceId,{});
   for(const p of g.players)decide(g,p.id,{vote:true});
   assert.equal(g.pending.stage,'praise');
+  assert.equal(publicState(g,actor.id).pending.stage,'praise');
   assert.equal(actor.hand.length,before-1);
   decide(g,actor.id,{ackPraise:true});
   assert.equal(g.pending,null);
