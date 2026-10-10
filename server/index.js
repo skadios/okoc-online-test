@@ -119,7 +119,7 @@ function handleGameAction(r,p,msg){
   const beforePending=r.game.pending;
   action(r.game,p.id,{...msg,actionId:String(msg.actionId||uid())});
   // Sub Rosa deliberately reveals private information only to the actor.
-  if(msg.type==='decision' && beforePending?.type==='subRosa' && beforePending.actorId===p.id && msg.payload?.mode==='hand'){
+  if(msg.type==='decision' && beforePending?.type==='subRosa' && beforePending.actorId===p.id && !beforePending.mode && msg.payload?.mode==='hand'){
     const target=playerById(r.game,beforePending.targetId);if(target){sendPrivatePeek(r.sockets.get(p.id),target.hand);}
   }
   if(msg.type==='decision' && beforePending?.type==='subRosa' && beforePending.actorId===p.id && msg.payload?.mode==='knight'){
